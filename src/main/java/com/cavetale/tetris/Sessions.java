@@ -2,6 +2,7 @@ package com.cavetale.tetris;
 
 import com.cavetale.sidebar.PlayerSidebarEvent;
 import com.cavetale.sidebar.Priority;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerItemHeldEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 @RequiredArgsConstructor
@@ -23,6 +25,9 @@ public final class Sessions implements Listener {
 
     public void enable() {
         Bukkit.getPluginManager().registerEvents(this, plugin);
+        for (Player p : Bukkit.getOnlinePlayers()) {
+        of(p).enable(p);
+        }
     }
 
     public void disable() {
@@ -38,9 +43,14 @@ public final class Sessions implements Listener {
 
     @EventHandler
     private void onPlayerQuit(PlayerQuitEvent event) {
-        TetrisPlayer session = sessions.remove(event.getPlayer().getUniqueId());
-        if (session == null) return;
-        session.disable();
+        Player p = event.getPlayer();
+        of(p).disable();
+    }
+
+    @EventHandler
+    private void onPlayerJoin(PlayerJoinEvent event) {
+        Player p = event.getPlayer();
+        of(p).enable(p);
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
@@ -67,7 +77,9 @@ public final class Sessions implements Listener {
         if (session == null) return;
         TetrisGame game = session.getGame();
         if (game == null) return;
-        List<Component> lines = game.getSidebarLines();
+        List<Component> lines = new ArrayList<>();
+        game.getSidebarLines(lines);
+        if (plugin.getTournament() != null) plugin.getTournament().getSidebarLines(lines);
         if (lines != null && !lines.isEmpty()) {
             event.add(plugin, Priority.HIGHEST, lines);
         }

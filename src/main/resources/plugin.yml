@@ -20,8 +20,19 @@ commands:
     usage: |-
       /tetris
 
+  tetrisadmin:
+    aliases: [tetrisadm]
+    description: Admin Command
+    permission: tetris.admin
+    usage: |-
+      /tetrisadmin
+
 permissions:
 
   tetris.tetris:
     description: Use /tetris
+    default: op
+
+  tetris.admin:
+    description: Use /tetrisadmin
     default: op

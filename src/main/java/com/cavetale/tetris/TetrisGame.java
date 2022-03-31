@@ -1,11 +1,16 @@
 package com.cavetale.tetris;
 
+import com.cavetale.area.struct.Vec3i;
 import com.cavetale.core.font.Unicode;
 import com.cavetale.mytems.util.BlockColor;
+import com.cavetale.mytems.util.Items;
 import com.cavetale.worldmarker.entity.EntityMarker;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -16,6 +21,7 @@ import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TNTPrimed;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.util.Vector;
 import static net.kyori.adventure.text.Component.join;
 import static net.kyori.adventure.text.Component.space;
 import static net.kyori.adventure.text.Component.text;
@@ -25,10 +31,11 @@ import static net.kyori.adventure.text.format.NamedTextColor.*;
 import static net.kyori.adventure.text.format.TextDecoration.*;
 import static net.kyori.adventure.title.Title.title;
 
-@RequiredArgsConstructor
+@Getter @RequiredArgsConstructor
 public final class TetrisGame {
     private final TetrisPlayer player;
     private final TetrisPlace place;
+    private final Vec3i home;
     private GameState state = GameState.INIT;
     private TetrisBoard board;
     private TetrisBlock block;
@@ -37,10 +44,12 @@ public final class TetrisGame {
     private int fallingTicks;
     private int stateTicks;
     private int score;
+    private int battleScore;
     private int lines;
     private int level;
     private List<Integer> fullRows = List.of();
     private int clearTicks;
+    @Setter private TetrisBattle battle;
 
     public void initialize(Player p) {
         board = new TetrisBoard(10, 20);
@@ -51,17 +60,7 @@ public final class TetrisGame {
         drawFrame();
         drawBoard();
         drawBlock(true);
-        for (int i = 0; i < 9; i += 1) {
-            Hotbar hotbar = Hotbar.ofSlot(i);
-            if (hotbar == null || hotbar.mytems == null) {
-                p.getInventory().setItem(i, null);
-            } else {
-                p.getInventory().setItem(i, hotbar.mytems.createItemStack());
-            }
-        }
-        p.setGameMode(GameMode.ADVENTURE);
-        p.setAllowFlight(true);
-        p.setFlying(true);
+        teleportHome(p);
         p.sendExperienceChange((float) (lines % 10) / 10.0f, level);
     }
 
@@ -72,6 +71,7 @@ public final class TetrisGame {
         }
         if (player.getGame() == this) player.setGame(null);
         clearFrame();
+        state = GameState.DISABLE;
     }
 
     private void clearFrame() {
@@ -177,6 +177,14 @@ public final class TetrisGame {
     }
 
     private void tick() {
+        if (battle != null && battle.findWinner() == this) {
+            player.getPlayer().showTitle(title(text("GAME OVER", RED),
+                                               text(Unicode.tiny("final score ") + score, GRAY)));
+            TetrisPlugin.instance.onVictory(this, battle);
+            battle.disable();
+            disable();
+            return;
+        }
         GameState newState;
         try {
             newState = tickState(state);
@@ -210,10 +218,18 @@ public final class TetrisGame {
                     state = GameState.FALL;
                 } else {
                     state = GameState.CLEAR;
-                    int rows = fullRows.size();
-                    clearTicks = 10 * rows;
-                    lines += rows;
-                    score += scoreBonus(lines) * (level + 1);
+                    int newLines = fullRows.size();
+                    clearTicks = 10 * newLines;
+                    lines += newLines;
+                    int scoreBonus = scoreBonus(newLines) * (level + 1);
+                    score += scoreBonus;
+                    battleScore += scoreBonus;
+                    if (battle != null) {
+                        for (TetrisGame other : battle.getGames()) {
+                            if (other == this) continue;
+                            other.battleScore -= scoreBonus;
+                        }
+                    }
                     int newLevel = lines / 10;
                     Player p = player.getPlayer();
                     if (newLevel > level) {
@@ -275,6 +291,10 @@ public final class TetrisGame {
     }
 
     private GameState tickFall() {
+        if (battleScore < -1000) {
+            battleScore = 0;
+            shiftUp();
+        }
         fallingTicks -= 1;
         if (fallingTicks > 0) return null;
         if (!doesBlockFitAt(block.getX(), block.getY() - 1)) {
@@ -344,6 +364,8 @@ public final class TetrisGame {
         case TURN_RIGHT:
             turn(p, 1);
             break;
+        case HOME:
+            teleportHome(p);
         default: break;
         }
     }
@@ -369,8 +391,14 @@ public final class TetrisGame {
         p.sendActionBar(text((rotation < 0 ? "Turn Left" : "Turn Right"), AQUA));
     }
 
-    public List<Component> getSidebarLines() {
-        List<Component> l = new ArrayList<>();
+    public boolean isActive() {
+        switch (state) {
+        case LOSE: case DISABLE: return false;
+        default: return true;
+        }
+    }
+
+    public void getSidebarLines(List<Component> l) {
         l.add(join(noSeparators(),
                        text("T", GOLD),
                        text("E", BLUE),
@@ -389,6 +417,50 @@ public final class TetrisGame {
                        text("]", GRAY)));
         l.add(join(separator(space()), text(Unicode.tiny("score"), GRAY), text("" + score, WHITE)));
         l.add(join(separator(space()), text(Unicode.tiny("level"), GRAY), text("" + level, WHITE)));
-        return l;
+        if (battle != null) {
+            l.add(text(Unicode.tiny("opponents"), GOLD, ITALIC));
+            List<TetrisGame> games = new ArrayList<>(battle.getGames());
+            games.remove(this);
+            Collections.sort(games, (a, b) -> Integer.compare(b.getScore(), a.getScore()));
+            int scoreLength = 0;
+            for (TetrisGame other : games) {
+                scoreLength = Math.max(scoreLength, ("" + other.getScore()).length());
+            }
+            for (TetrisGame other : games) {
+                String scoreString = String.format("%" + scoreLength + "d", other.getScore());
+                Player p = other.getPlayer().getPlayer();
+                l.add(join(separator(space()),
+                               text(scoreString, other.isActive() ? WHITE : DARK_GRAY),
+                               (p != null ? p.displayName() : text(other.getPlayer().getName(), WHITE))));
+            }
+        }
+    }
+
+    public void shiftUp() {
+        drawBlock(false);
+        block.setY(block.getY() + 1);
+        board.shiftUp();
+        drawBoard();
+        drawBlock(true);
+    }
+
+    public void teleportHome(Player p) {
+        Location loc = home.toLocation(place.getWorld());
+        loc.setDirection(new Vector(-place.front.getModX(),
+                                    0.0,
+                                    -place.front.getModZ()));
+        p.teleport(loc);
+        p.setGameMode(GameMode.ADVENTURE);
+        p.setAllowFlight(true);
+        p.setFlying(true);
+        for (int i = 0; i < 9; i += 1) {
+            Hotbar hotbar = Hotbar.ofSlot(i);
+            if (hotbar == null || hotbar.mytems == null) {
+                p.getInventory().setItem(i, null);
+            } else {
+                p.getInventory().setItem(i, Items.text(hotbar.mytems.createIcon(),
+                                                       List.of(hotbar.text)));
+            }
+        }
     }
 }

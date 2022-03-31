@@ -3,6 +3,7 @@ package com.cavetale.tetris;
 import com.cavetale.mytems.util.BlockColor;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public final class TetrisBoard {
@@ -152,5 +153,21 @@ public final class TetrisBoard {
             result.add(y);
         }
         return result;
+    }
+
+    public void shiftUp() {
+        for (int y = height - 1; y > 0; y -= 1) {
+            for (int x = 0; x < width; x += 1) {
+                set(x, y, get(x, y - 1));
+            }
+        }
+        List<Integer> row = new ArrayList<>();
+        for (int i = 0; i < width; i += 1) {
+            row.add(i <= width / 2 ? BlockColor.BLACK.ordinal() + 1 : 0);
+        }
+        Collections.shuffle(row, Rnd.get());
+        for (int i = 0; i < width; i += 1) {
+            board[i] = row.get(i);
+        }
     }
 }

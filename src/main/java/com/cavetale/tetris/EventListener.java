@@ -20,5 +20,7 @@ public final class EventListener implements Listener {
     void onEntityExplode(EntityExplodeEvent event) {
         if (!EntityMarker.hasId(event.getEntity(), "tetris")) return;
         event.blockList().clear();
+        event.setCancelled(true);
+        event.getEntity().remove();
     }
 }
