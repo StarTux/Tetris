@@ -63,6 +63,7 @@ public final class TetrisGame {
         drawBlock(true);
         teleportHome(p);
         p.sendExperienceChange((float) (lines % 10) / 10.0f, level);
+        p.playSound(p.getLocation(), Sound.ENTITY_WITHER_SPAWN, SoundCategory.MASTER, 0.5f, 2.0f);
     }
 
     public void disable() {
@@ -184,7 +185,7 @@ public final class TetrisGame {
 
     private void tick() {
         if (battle != null && battle.findWinner() == this) {
-            player.getPlayer().showTitle(title(text("GAME OVER", RED),
+            player.getPlayer().showTitle(title(text("VICTOR", GREEN, BOLD),
                                                text(Unicode.tiny("final score ") + score, GRAY)));
             TetrisPlugin.instance.onVictory(this, battle);
             battle.disable();
@@ -299,7 +300,7 @@ public final class TetrisGame {
     }
 
     private GameState tickFall() {
-        if (battleScore < -1000) {
+        if (battleScore < (-100 * (level + 1))) {
             battleScore = 0;
             shiftUp();
         }
@@ -407,14 +408,6 @@ public final class TetrisGame {
     }
 
     public void getSidebarLines(List<Component> l) {
-        l.add(join(noSeparators(),
-                       text("T", GOLD),
-                       text("E", BLUE),
-                       text("T", GOLD),
-                       text("R", RED),
-                       text("I", YELLOW),
-                       text("S", GREEN))
-                  .decorate(BOLD));
         if (state == GameState.LOSE) {
             l.add(text("GAME OVER", RED, BOLD));
         }

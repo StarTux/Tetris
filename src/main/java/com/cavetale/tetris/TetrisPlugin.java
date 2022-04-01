@@ -32,7 +32,7 @@ public final class TetrisPlugin extends JavaPlugin {
         adminCommand.enable();
         eventListener.enable();
         sessions.enable();
-        Bukkit.getScheduler().runTask(this, () -> allocator.enable(Bukkit.getWorlds().get(0), 32));
+        Bukkit.getScheduler().runTask(this, () -> allocator.enable(Bukkit.getWorlds().get(0), 24));
     }
 
     @Override
@@ -63,6 +63,7 @@ public final class TetrisPlugin extends JavaPlugin {
         game.setSlice(slice);
         session.setGame(game);
         games.add(game);
+        slice.setGame(game);
         game.initialize(player);
         return game;
     }

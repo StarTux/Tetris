@@ -40,6 +40,9 @@ public final class AdminCommand extends AbstractCommand<TetrisPlugin> {
             .description("Adjust player rank")
             .completers(CommandArgCompleter.NULL, CommandArgCompleter.integer(i -> i != 0))
             .senderCaller(this::tournamentRank);
+        tournamentNode.addChild("clear").denyTabCompletion()
+            .description("Clear the rankings")
+            .senderCaller(this::tournamentClear);
         CommandNode battleNode = rootNode.addChild("battle")
             .description("Multiplayer battle commands");
         battleNode.addChild("start").arguments("<player...>")
@@ -111,6 +114,15 @@ public final class AdminCommand extends AbstractCommand<TetrisPlugin> {
         plugin.getTournament().save();
         sender.sendMessage(text("Rank of " + target.getName() + " adjusted by " + amount, AQUA));
         return true;
+    }
+
+    private void tournamentClear(CommandSender sender) {
+        if (plugin.getTournament() == null) {
+            throw new CommandWarn("Tournament not enabled!");
+        }
+        plugin.getTournament().getTag().getRanks().clear();
+        plugin.getTournament().save();
+        sender.sendMessage(text("Ranks cleared!", AQUA));
     }
 
     private boolean battleStart(CommandSender sender, String[] args) {

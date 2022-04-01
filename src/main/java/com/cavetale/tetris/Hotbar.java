@@ -8,13 +8,15 @@ import static net.kyori.adventure.text.format.NamedTextColor.*;
 
 @RequiredArgsConstructor
 public enum Hotbar {
-    TURN_LEFT(0, Mytems.TURN_LEFT, text("Turn Left", GREEN)),
-    NEUTRAL(1, null, null),
-    TURN_RIGHT(2, Mytems.TURN_RIGHT, text("Turn Right", GREEN)),
+    LEFT(0, Mytems.ARROW_LEFT, text("Left", GREEN)),
+    DOWN(1, Mytems.ARROW_DOWN, text("Down", GREEN)),
+    RIGHT(2, Mytems.ARROW_RIGHT, text("Right", GREEN)),
+
     HOME(4, Mytems.REDO, text("Warp Home", BLUE)),
-    LEFT(6, Mytems.ARROW_LEFT, text("Left", GREEN)),
-    DOWN(7, Mytems.ARROW_DOWN, text("Down", GREEN)),
-    RIGHT(8, Mytems.ARROW_RIGHT, text("Right", GREEN)),
+
+    TURN_LEFT(6, Mytems.TURN_LEFT, text("Turn Left", GREEN)),
+    NEUTRAL(7, null, null),
+    TURN_RIGHT(8, Mytems.TURN_RIGHT, text("Turn Right", GREEN)),
     ;
 
     public final int slot;

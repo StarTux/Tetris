@@ -80,7 +80,7 @@ public final class Tournament {
         List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers());
         players.removeIf(p -> tag.ranks.getOrDefault(p.getUniqueId(), 0) == 0);
         if (players.isEmpty()) return;
-        l.add(text(Unicode.tiny("opponents"), GOLD, ITALIC));
+        l.add(text(Unicode.tiny("tournament"), GOLD, ITALIC));
         Collections.sort(players, (a, b) -> {
                 int val = Integer.compare(tag.ranks.getOrDefault(b.getUniqueId(), 0),
                                           tag.ranks.getOrDefault(a.getUniqueId(), 0));

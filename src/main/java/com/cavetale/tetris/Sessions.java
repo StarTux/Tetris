@@ -14,9 +14,16 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import static net.kyori.adventure.text.Component.join;
+import static net.kyori.adventure.text.Component.text;
+import static net.kyori.adventure.text.JoinConfiguration.noSeparators;
+import static net.kyori.adventure.text.format.NamedTextColor.*;
+import static net.kyori.adventure.text.format.TextDecoration.*;
 
 @RequiredArgsConstructor
 public final class Sessions implements Listener {
@@ -74,11 +81,35 @@ public final class Sessions implements Listener {
     private void onPlayerSidebar(PlayerSidebarEvent event) {
         TetrisPlayer session = of(event.getPlayer());
         TetrisGame game = session.getGame();
-        List<Component> lines = new ArrayList<>();
-        if (game != null) game.getSidebarLines(lines);
-        if (plugin.getTournament() != null) plugin.getTournament().getSidebarLines(lines);
-        if (lines != null && !lines.isEmpty()) {
-            event.add(plugin, Priority.HIGHEST, lines);
+        List<Component> l = new ArrayList<>();
+        l.add(join(noSeparators(),
+                   text("T", GOLD),
+                   text("E", BLUE),
+                   text("T", GOLD),
+                   text("R", RED),
+                   text("I", YELLOW),
+                   text("S", GREEN))
+              .decorate(BOLD));
+        if (game != null) game.getSidebarLines(l);
+        if (plugin.getTournament() != null) plugin.getTournament().getSidebarLines(l);
+        if (l != null && !l.isEmpty()) {
+            event.add(plugin, Priority.HIGHEST, l);
         }
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
+    private void onInventoryClick(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player player)) return;
+        TetrisPlayer session = of(player);
+        TetrisGame game = session.getGame();
+        if (game != null) event.setCancelled(true);
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
+    private void onPlayerItemDrop(PlayerDropItemEvent event) {
+        Player player = event.getPlayer();
+        TetrisPlayer session = of(player);
+        TetrisGame game = session.getGame();
+        if (game != null) event.setCancelled(true);
     }
 }
