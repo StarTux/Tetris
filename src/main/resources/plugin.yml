@@ -3,7 +3,7 @@ main: com.cavetale.tetris.TetrisPlugin
 name: Tetris
 version: 0.1
 description: Tetris Plugin
-api-version: 1.17
+api-version: 1.18
 
 author: StarTux
 website: https://github.com/StarTux/Tetris

@@ -78,7 +78,6 @@ public final class Tournament {
 
     public void getSidebarLines(List<Component> l) {
         List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers());
-        players.removeIf(p -> tag.ranks.getOrDefault(p.getUniqueId(), 0) == 0);
         if (players.isEmpty()) return;
         l.add(text(Unicode.tiny("tournament"), GOLD, ITALIC));
         Collections.sort(players, (a, b) -> {
@@ -92,7 +91,7 @@ public final class Tournament {
             Player p = players.get(i);
             l.add(join(noSeparators(),
                        Glyph.toComponent("" + (i + 1)),
-                       text(Unicode.subscript("" + tag.ranks.get(p.getUniqueId())), GOLD),
+                       text(Unicode.subscript("" + tag.ranks.getOrDefault(p.getUniqueId(), 0)), GOLD),
                        space(),
                        p.displayName()));
         }

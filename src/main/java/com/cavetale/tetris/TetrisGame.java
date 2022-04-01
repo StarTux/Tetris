@@ -79,6 +79,8 @@ public final class TetrisGame {
         clearFrame();
         TetrisPlugin.instance.games.remove(this);
         state = GameState.DISABLE;
+        Player p = player.getPlayer();
+        if (p != null) p.getInventory().clear();
     }
 
     private void clearFrame() {
@@ -463,5 +465,6 @@ public final class TetrisGame {
                                                        List.of(hotbar.text)));
             }
         }
+        p.getInventory().setHeldItemSlot(Hotbar.NEUTRAL.slot);
     }
 }
