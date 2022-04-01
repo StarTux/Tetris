@@ -50,6 +50,7 @@ public final class TetrisGame {
     private List<Integer> fullRows = List.of();
     private int clearTicks;
     @Setter private TetrisBattle battle;
+    @Setter private WorldSlice slice;
 
     public void initialize(Player p) {
         board = new TetrisBoard(10, 20);
@@ -69,8 +70,13 @@ public final class TetrisGame {
             task.cancel();
             task = null;
         }
+        if (slice != null && slice.getGame() == this) {
+            slice.setGame(null);
+            slice = null;
+        }
         if (player.getGame() == this) player.setGame(null);
         clearFrame();
+        TetrisPlugin.instance.games.remove(this);
         state = GameState.DISABLE;
     }
 
@@ -216,6 +222,8 @@ public final class TetrisGame {
                 fullRows = board.getFullRows();
                 if (fullRows.isEmpty()) {
                     state = GameState.FALL;
+                    Player p = player.getPlayer();
+                    p.playSound(p.getLocation(), Sound.BLOCK_STONE_FALL, SoundCategory.BLOCKS, 1.0f, 0.5f);
                 } else {
                     state = GameState.CLEAR;
                     int newLines = fullRows.size();

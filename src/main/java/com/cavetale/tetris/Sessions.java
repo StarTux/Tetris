@@ -26,7 +26,7 @@ public final class Sessions implements Listener {
     public void enable() {
         Bukkit.getPluginManager().registerEvents(this, plugin);
         for (Player p : Bukkit.getOnlinePlayers()) {
-        of(p).enable(p);
+            of(p).enable(p);
         }
     }
 
@@ -72,13 +72,10 @@ public final class Sessions implements Listener {
 
     @EventHandler
     private void onPlayerSidebar(PlayerSidebarEvent event) {
-        Player player = event.getPlayer();
-        TetrisPlayer session = sessions.get(player.getUniqueId());
-        if (session == null) return;
+        TetrisPlayer session = of(event.getPlayer());
         TetrisGame game = session.getGame();
-        if (game == null) return;
         List<Component> lines = new ArrayList<>();
-        game.getSidebarLines(lines);
+        if (game != null) game.getSidebarLines(lines);
         if (plugin.getTournament() != null) plugin.getTournament().getSidebarLines(lines);
         if (lines != null && !lines.isEmpty()) {
             event.add(plugin, Priority.HIGHEST, lines);

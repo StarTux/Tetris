@@ -4,6 +4,7 @@ import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 
 @Getter
@@ -16,8 +17,12 @@ public final class TetrisPlayer {
         this.uuid = player.getUniqueId();
     }
 
-    public void enable(Player player) {
-        this.name = player.getName();
+    public void enable(Player p) {
+        this.name = p.getName();
+        p.setGameMode(GameMode.ADVENTURE);
+        p.getInventory().clear();
+        p.setAllowFlight(true);
+        p.setFlying(true);
     }
 
     public void disable() {
