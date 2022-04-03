@@ -4,6 +4,7 @@ import com.cavetale.area.struct.Vec3i;
 import com.cavetale.core.font.Unicode;
 import com.cavetale.mytems.util.BlockColor;
 import com.cavetale.mytems.util.Items;
+import com.cavetale.tetris.sql.SQLScore;
 import com.cavetale.worldmarker.entity.EntityMarker;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -219,6 +220,9 @@ public final class TetrisGame {
                 state = GameState.LOSE;
                 player.getPlayer().showTitle(title(text("GAME OVER", RED),
                                                    text(Unicode.tiny("final score ") + score, GRAY)));
+                if (score > 0) {
+                    TetrisPlugin.instance.database.insertAsync(new SQLScore(this), null);
+                }
                 stateTicks = 0;
             } else {
                 board.paste(block.getBoard(), block.getX(), block.getY());

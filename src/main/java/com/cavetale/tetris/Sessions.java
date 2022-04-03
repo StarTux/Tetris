@@ -19,9 +19,6 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import static net.kyori.adventure.text.Component.join;
-import static net.kyori.adventure.text.Component.text;
-import static net.kyori.adventure.text.JoinConfiguration.noSeparators;
 import static net.kyori.adventure.text.format.NamedTextColor.*;
 import static net.kyori.adventure.text.format.TextDecoration.*;
 
@@ -82,14 +79,7 @@ public final class Sessions implements Listener {
         TetrisPlayer session = of(event.getPlayer());
         TetrisGame game = session.getGame();
         List<Component> l = new ArrayList<>();
-        l.add(join(noSeparators(),
-                   text("T", GOLD),
-                   text("E", BLUE),
-                   text("T", GOLD),
-                   text("R", RED),
-                   text("I", YELLOW),
-                   text("S", GREEN))
-              .decorate(BOLD));
+        l.add(plugin.tetrisTitle);
         if (game != null) game.getSidebarLines(l);
         if (plugin.getTournament() != null) plugin.getTournament().getSidebarLines(l);
         if (l != null && !l.isEmpty()) {

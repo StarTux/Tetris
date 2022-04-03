@@ -1,15 +1,23 @@
 package com.cavetale.tetris;
 
 import com.cavetale.area.struct.Vec3i;
+import com.cavetale.tetris.sql.SQLScore;
+import com.winthier.sql.SQLDatabase;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import static net.kyori.adventure.text.Component.join;
+import static net.kyori.adventure.text.Component.text;
+import static net.kyori.adventure.text.JoinConfiguration.noSeparators;
+import static net.kyori.adventure.text.format.NamedTextColor.*;
+import static net.kyori.adventure.text.format.TextDecoration.*;
 
 public final class TetrisPlugin extends JavaPlugin {
     @Getter protected static TetrisPlugin instance;
@@ -20,6 +28,15 @@ public final class TetrisPlugin extends JavaPlugin {
     @Getter @Setter private Tournament tournament = null;
     @Getter protected final Allocator allocator = new Allocator(this);
     protected List<TetrisGame> games = new ArrayList<>();
+    protected SQLDatabase database = new SQLDatabase(this);
+    public final Component tetrisTitle = join(noSeparators(), new Component[] {
+            text("T", GOLD),
+            text("E", BLUE),
+            text("T", GOLD),
+            text("R", RED),
+            text("I", YELLOW),
+            text("S", GREEN)
+        }).decorate(BOLD);
 
     @Override
     public void onLoad() {
@@ -28,6 +45,8 @@ public final class TetrisPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        database.registerTables(SQLScore.class);
+        database.createAllTables();
         tetrisCommand.enable();
         adminCommand.enable();
         eventListener.enable();
