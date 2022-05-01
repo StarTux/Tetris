@@ -137,8 +137,8 @@ public final class TetrisGame {
                     place.getBlockAt(x, y, 0).setType(frameMaterial, false);
                     place.getBlockAt(x, y, 1).setType(frameMaterial, false);
                 } else {
-                    place.getBlockAt(x, y, -1).setType(Material.WHITE_STAINED_GLASS, false);
-                    place.getBlockAt(x, y, 1).setType(Material.BARRIER, false);
+                    place.getBlockAt(x, y, -1).setType(Material.BLACK_STAINED_GLASS, false);
+                    place.getBlockAt(x, y, 1).setType(Material.LIGHT, false);
                 }
             }
         }
@@ -427,7 +427,7 @@ public final class TetrisGame {
         p.sendActionBar(text("Drop", GREEN));
         boolean success = false;
         drawBlock(false);
-        while (block.getY() > 0 && doesBlockFitAt(block.getX(), block.getY() - 1, block.getRotation())) {
+        while (doesBlockFitAt(block.getX(), block.getY() - 1, block.getRotation())) {
             block.setY(block.getY() - 1);
             success = true;
         }

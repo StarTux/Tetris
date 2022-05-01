@@ -137,6 +137,9 @@ public final class Tournament {
             count += 1;
         }
         Trophies.insertTrophies(trophies);
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            Korobeniki.play(player);
+        }
         return count;
     }
 
