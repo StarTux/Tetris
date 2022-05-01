@@ -2,7 +2,11 @@ package com.cavetale.tetris;
 
 import com.cavetale.core.font.Unicode;
 import com.cavetale.core.util.Json;
+import com.cavetale.fam.trophy.SQLTrophy;
+import com.cavetale.fam.trophy.Trophies;
 import com.cavetale.mytems.item.font.Glyph;
+import com.cavetale.mytems.item.trophy.TrophyCategory;
+import com.winthier.playercache.PlayerCache;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,6 +35,7 @@ public final class Tournament {
     @Getter private Tag tag;
     private BukkitTask task;
     @Getter @Setter private boolean auto = false;
+    private List<Rank> highscore = List.of();
 
     public void enable() {
         load();
@@ -46,6 +51,7 @@ public final class Tournament {
 
     public void load() {
         tag = Json.load(new File(plugin.getDataFolder(), "tournament.json"), Tag.class, Tag::new);
+        updateHighscoreList();
     }
 
     public void save() {
@@ -57,44 +63,80 @@ public final class Tournament {
     public void onVictory(TetrisGame winner, TetrisBattle battle) {
         for (TetrisGame game : battle.getGames()) {
             if (winner == game) {
-                addRank(game.getPlayer(), 1);
+                addRank(game.getPlayer().uuid, 1);
             } else {
-                addRank(game.getPlayer(), -1);
+                addRank(game.getPlayer().uuid, 0);
             }
         }
         save();
+        updateHighscoreList();
     }
 
-    public void addRank(TetrisPlayer player, int rank) {
-        int value = tag.ranks.getOrDefault(player.uuid, 0);
+    public void addRank(UUID uuid, int rank) {
+        int value = tag.ranks.getOrDefault(uuid, 0);
         int newValue = Math.max(0, value + rank);
-        tag.ranks.put(player.uuid, newValue);
-        plugin.getLogger().info("Tournament: " + player.getName() + " " + value + " => " + newValue);
+        tag.ranks.put(uuid, newValue);
     }
 
     public int getRank(TetrisPlayer player) {
         return tag.ranks.getOrDefault(player.uuid, 0);
     }
 
-    public void getSidebarLines(List<Component> l) {
-        List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers());
-        if (players.isEmpty()) return;
-        l.add(text(Unicode.tiny("tournament"), GOLD, ITALIC));
-        Collections.sort(players, (a, b) -> {
-                int val = Integer.compare(tag.ranks.getOrDefault(b.getUniqueId(), 0),
-                                          tag.ranks.getOrDefault(a.getUniqueId(), 0));
-                if (val != 0) return val;
-                return String.CASE_INSENSITIVE_ORDER.compare(a.getName(), b.getName());
+    private List<Rank> computeHighscoreList() {
+        List<Rank> result = new ArrayList<>();
+        for (Map.Entry<UUID, Integer> entry : tag.ranks.entrySet()) {
+            result.add(new Rank(entry.getValue(), entry.getKey()));
+        }
+        Collections.sort(result, (a, b) -> {
+                int score = Integer.compare(b.score(), a.score());
+                return score != 0
+                    ? score
+                    : String.CASE_INSENSITIVE_ORDER.compare(a.name(), b.name());
             });
-        for (int i = 0; i < 9; i += 1) {
-            if (i >= players.size()) break;
-            Player p = players.get(i);
+        return result;
+    }
+
+    public void updateHighscoreList() {
+        this.highscore = computeHighscoreList();
+    }
+
+    public void getSidebarLines(List<Component> l) {
+        if (highscore.isEmpty()) return;
+        l.add(text(Unicode.tiny("tournament"), GOLD, ITALIC));
+        for (int i = 0; i < 10; i += 1) {
+            if (i >= highscore.size()) break;
+            Rank rank = highscore.get(i);
             l.add(join(noSeparators(),
                        Glyph.toComponent("" + (i + 1)),
-                       text(Unicode.subscript("" + tag.ranks.getOrDefault(p.getUniqueId(), 0)), GOLD),
+                       text(Unicode.subscript("" + rank.score()), GOLD),
                        space(),
-                       p.displayName()));
+                       rank.displayName()));
         }
+    }
+
+    public int reward() {
+        updateHighscoreList();
+        if (highscore.isEmpty()) return 0;
+        int placement = 0;
+        int lastScore = -1;
+        int count = 0;
+        List<SQLTrophy> trophies = new ArrayList<>();
+        for (Rank rank : highscore) {
+            if (lastScore != rank.score()) {
+                lastScore = rank.score();
+                placement += 1;
+            }
+            if (placement <= 3) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "titles unlockset " + rank.name() + " Tetromino");
+            }
+            trophies.add(new SQLTrophy(rank.uuid(), "tetris_tournament",
+                                       placement,
+                                       TrophyCategory.TETRIS,
+                                       plugin.tetrisTitle, "You earned " + rank.score() + " point" + (rank.score() != 1 ? "s" : "")));
+            count += 1;
+        }
+        Trophies.insertTrophies(trophies);
+        return count;
     }
 
     private void tick() {
@@ -129,6 +171,7 @@ public final class Tournament {
                     game.getPlayer().getPlayer().sendMessage(text("Starting game with " + String.join(", ", names), GREEN));
                 }
                 plugin.getLogger().info("[Tournament] Starting battle (" + rank + ")" + String.join(", ", names));
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "ml add " + String.join(" ", names));
             }
         }
     }
@@ -136,5 +179,18 @@ public final class Tournament {
     @Data
     public static final class Tag {
         protected Map<UUID, Integer> ranks = new HashMap<>();
+    }
+
+    private static record Rank(int score, UUID uuid) {
+        public String name() {
+            return PlayerCache.nameForUuid(uuid());
+        }
+
+        public Component displayName() {
+            Player player = Bukkit.getPlayer(uuid());
+            return player != null
+                ? player.displayName()
+                : text(name());
+        }
     }
 }

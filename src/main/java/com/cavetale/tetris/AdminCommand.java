@@ -4,6 +4,7 @@ import com.cavetale.core.command.AbstractCommand;
 import com.cavetale.core.command.CommandArgCompleter;
 import com.cavetale.core.command.CommandNode;
 import com.cavetale.core.command.CommandWarn;
+import com.winthier.playercache.PlayerCache;
 import java.util.ArrayList;
 import java.util.List;
 import org.bukkit.Bukkit;
@@ -46,6 +47,9 @@ public final class AdminCommand extends AbstractCommand<TetrisPlugin> {
         tournamentNode.addChild("clear").denyTabCompletion()
             .description("Clear the rankings")
             .senderCaller(this::tournamentClear);
+        tournamentNode.addChild("reward").denyTabCompletion()
+            .description("Deliver rewards")
+            .senderCaller(this::tournamentReward);
         CommandNode battleNode = rootNode.addChild("battle")
             .description("Multiplayer battle commands");
         battleNode.addChild("start").arguments("<player...>")
@@ -114,11 +118,11 @@ public final class AdminCommand extends AbstractCommand<TetrisPlugin> {
         if (plugin.getTournament() == null) {
             throw new CommandWarn("Tournament not enabled!");
         }
-        Player target = Bukkit.getPlayerExact(args[0]);
-        if (target == null) throw new CommandWarn("Player not found: " + args[0]);
+        PlayerCache target = PlayerCache.require(args[0]);
         int amount = CommandArgCompleter.requireInt(args[1], i -> i != 0);
-        plugin.getTournament().addRank(plugin.sessions.of(target), amount);
+        plugin.getTournament().addRank(target.uuid, amount);
         plugin.getTournament().save();
+        plugin.getTournament().updateHighscoreList();
         sender.sendMessage(text("Rank of " + target.getName() + " adjusted by " + amount, AQUA));
         return true;
     }
@@ -129,7 +133,16 @@ public final class AdminCommand extends AbstractCommand<TetrisPlugin> {
         }
         plugin.getTournament().getTag().getRanks().clear();
         plugin.getTournament().save();
+        plugin.getTournament().updateHighscoreList();
         sender.sendMessage(text("Ranks cleared!", AQUA));
+    }
+
+    private void tournamentReward(CommandSender sender) {
+        if (plugin.getTournament() == null) {
+            throw new CommandWarn("Tournament not enabled!");
+        }
+        int count = plugin.getTournament().reward();
+        sender.sendMessage(text(count + " rewards given"));
     }
 
     private boolean battleStart(CommandSender sender, String[] args) {
