@@ -65,7 +65,7 @@ public final class TetrisGame {
         makeNewBlock();
         state = GameState.FALL;
         task = Bukkit.getScheduler().runTaskTimer(TetrisPlugin.instance, this::tick, 0L, 1L);
-        fallingTicks = 10;
+        fallingTicks = 20;
         drawFrame();
         drawBoard();
         drawBlock(true);
@@ -167,10 +167,10 @@ public final class TetrisGame {
             });
     }
 
-    public boolean doesBlockFitAt(final int offx, final int offy) {
+    public boolean doesBlockFitAt(final int offx, final int offy, final int rotation) {
         boolean[] result = new boolean[1];
         result[0] = true;
-        block.getBoard().forEachCell((dx, dy, color) -> {
+        block.getBoard(rotation).forEachCell((dx, dy, color) -> {
                 if (color == null) return;
                 final int x = offx + dx;
                 if (x < 0 || x >= board.width) {
@@ -178,29 +178,6 @@ public final class TetrisGame {
                     return;
                 }
                 final int y = offy + dy;
-                if (y < 0) { // y is allowed to be above the board!
-                    result[0] = false;
-                    return;
-                }
-                if (board.get(x, y) != 0) {
-                    result[0] = false;
-                    return;
-                }
-            });
-        return result[0];
-    }
-
-    public boolean doesBlockFitWith(final int rotation) {
-        boolean[] result = new boolean[1];
-        result[0] = true;
-        block.getBoard(rotation).forEachCell((dx, dy, color) -> {
-                if (color == null) return;
-                final int x = block.getX() + dx;
-                if (x < 0 || x >= board.width) {
-                    result[0] = false;
-                    return;
-                }
-                final int y = block.getY() + dy;
                 if (y < 0) { // y is allowed to be above the board!
                     result[0] = false;
                     return;
@@ -350,13 +327,13 @@ public final class TetrisGame {
         }
         fallingTicks -= 1;
         if (fallingTicks > 0) return null;
-        if (!doesBlockFitAt(block.getX(), block.getY() - 1)) {
+        if (!doesBlockFitAt(block.getX(), block.getY() - 1, block.getRotation())) {
             return GameState.LAND;
         }
         drawBlock(false);
         block.setY(block.getY() - 1);
         drawBlock(true);
-        fallingTicks = 10 - level;
+        fallingTicks = 20 - level;
         return null;
     }
 
@@ -403,7 +380,7 @@ public final class TetrisGame {
             move(p, 1);
             break;
         case DOWN:
-            if (doesBlockFitAt(block.getX(), block.getY() - 1)) {
+            if (doesBlockFitAt(block.getX(), block.getY() - 1, block.getRotation())) {
                 drawBlock(false);
                 block.setY(block.getY() - 1);
                 drawBlock(true);
@@ -431,7 +408,7 @@ public final class TetrisGame {
         p.sendActionBar(text("Drop", GREEN));
         boolean success = false;
         drawBlock(false);
-        while (block.getY() > 0 && doesBlockFitAt(block.getX(), block.getY() - 1)) {
+        while (block.getY() > 0 && doesBlockFitAt(block.getX(), block.getY() - 1, block.getRotation())) {
             block.setY(block.getY() - 1);
             success = true;
         }
@@ -444,7 +421,7 @@ public final class TetrisGame {
     }
 
     private void move(Player p, int dx) {
-        if (!doesBlockFitAt(block.getX() + dx, block.getY())) return;
+        if (!doesBlockFitAt(block.getX() + dx, block.getY(), block.getRotation())) return;
         drawBlock(false);
         block.setX(block.getX() + dx);
         drawBlock(true);
@@ -456,9 +433,20 @@ public final class TetrisGame {
         int newRotation = block.getRotation() + rotation;
         while (newRotation >= 4) newRotation -= 4;
         while (newRotation < 0) newRotation += 4;
-        if (!doesBlockFitWith(newRotation)) return;
+        int[] dx = new int[1];
+        block.getBoard(newRotation).forEachCell((x, y, color) -> {
+                if (color == null) return;
+                int x2 = x + block.getX();
+                if (x2 < 0) {
+                    dx[0] = Math.max(dx[0], -x2);
+                } else if (x2 >= board.width) {
+                    dx[0] = Math.min(dx[0], -(x2 - board.width + 1));
+                }
+            });
+        if (!doesBlockFitAt(block.getX() + dx[0], block.getY(), newRotation)) return;
         drawBlock(false);
         block.setRotation(newRotation);
+        block.setX(block.getX() + dx[0]);
         drawBlock(true);
         bit(p, 1.0f);
         p.sendActionBar(text((rotation < 0 ? "Turn Left" : "Turn Right"), AQUA));
