@@ -226,6 +226,7 @@ public final class TetrisGame {
             TetrisPlugin.instance.onVictory(this, battle);
             battle.disable();
             disable();
+            Korobeniki.play(getPlayer().getPlayer());
             return;
         }
         GameState newState;

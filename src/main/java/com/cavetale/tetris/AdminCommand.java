@@ -29,6 +29,9 @@ public final class AdminCommand extends AbstractCommand<TetrisPlugin> {
         rootNode.addChild("educate").denyTabCompletion()
             .description("Spam keybinds")
             .playerCaller(this::educate);
+        rootNode.addChild("korobeniki").denyTabCompletion()
+            .description("Play korobeniki")
+            .playerCaller(p -> Korobeniki.play(p));
         CommandNode tournamentNode = rootNode.addChild("tournament")
             .description("Tournament commands");
         tournamentNode.addChild("enable").denyTabCompletion()
