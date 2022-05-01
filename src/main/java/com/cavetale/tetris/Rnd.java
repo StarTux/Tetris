@@ -28,9 +28,4 @@ public final class Rnd {
         };
         return values[get().nextInt(values.length)];
     }
-
-    public static Tetromino tetromino() {
-        Tetromino[] values = Tetromino.values();
-        return values[get().nextInt(values.length)];
-    }
 }

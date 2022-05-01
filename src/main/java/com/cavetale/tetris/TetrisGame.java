@@ -52,9 +52,15 @@ public final class TetrisGame {
     private int clearTicks;
     @Setter private TetrisBattle battle;
     @Setter private WorldSlice slice;
+    private final List<Tetromino> tetrominos = new ArrayList<>();
+    private int tetrominoIndex;
 
     public void initialize(Player p) {
         board = new TetrisBoard(10, 20);
+        tetrominos.addAll(List.of(Tetromino.values()));
+        Collections.shuffle(tetrominos);
+        nextBlock = tetrominos.get(0);
+        tetrominoIndex = 1;
         makeNewBlock();
         state = GameState.FALL;
         task = Bukkit.getScheduler().runTaskTimer(TetrisPlugin.instance, this::tick, 0L, 1L);
@@ -180,10 +186,14 @@ public final class TetrisGame {
     }
 
     private void makeNewBlock() {
-        block = new TetrisBlock(nextBlock != null ? nextBlock : Rnd.tetromino(), Rnd.tetrisBlockColor());
+        block = new TetrisBlock(nextBlock, Rnd.tetrisBlockColor());
         block.setX(board.width / 2 - 2);
         block.setY(board.height);
-        nextBlock = Rnd.tetromino();
+        if (tetrominoIndex >= tetrominos.size()) {
+            tetrominoIndex = 0;
+            Collections.shuffle(tetrominos);
+        }
+        nextBlock = tetrominos.get(tetrominoIndex++);
     }
 
     private void tick() {
