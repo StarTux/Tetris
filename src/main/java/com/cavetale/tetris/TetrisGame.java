@@ -154,6 +154,24 @@ public final class TetrisGame {
     }
 
     private void drawBlock(boolean visible) {
+        // Draw shadow
+        int y2 = block.getY();
+        while (doesBlockFitAt(block.getX(), y2 - 1, block.getRotation())) {
+            y2 -= 1;
+        }
+        final int shadowY = y2;
+        block.getBoard().forEachCell((dx, dy, color) -> {
+                if (color == null) return;
+                final int x = dx + block.getX();
+                final int y = dy + shadowY;
+                if (x < 0 || x >= board.width) return;
+                if (y < 0 || y >= board.height) return;
+                Material material = visible
+                    ? color.getMaterial(BlockColor.Suffix.STAINED_GLASS)
+                    : Material.AIR;
+                place.getBlockAt(x, y, 0).setType(material, false);
+            });
+        // Draw original
         block.getBoard().forEachCell((dx, dy, color) -> {
                 if (color == null) return;
                 final int x = dx + block.getX();

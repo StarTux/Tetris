@@ -51,7 +51,7 @@ public final class TetrisPlugin extends JavaPlugin {
         adminCommand.enable();
         eventListener.enable();
         sessions.enable();
-        Bukkit.getScheduler().runTask(this, () -> allocator.enable(Bukkit.getWorlds().get(0), 24));
+        Bukkit.getScheduler().runTask(this, () -> allocator.enable(Bukkit.getWorld("tetris"), 24));
     }
 
     @Override
