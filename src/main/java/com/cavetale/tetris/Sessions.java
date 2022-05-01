@@ -100,6 +100,8 @@ public final class Sessions implements Listener {
         Player player = event.getPlayer();
         TetrisPlayer session = of(player);
         TetrisGame game = session.getGame();
-        if (game != null) event.setCancelled(true);
+        if (game == null) return;
+        event.setCancelled(true);
+        game.playerInputDrop(player);
     }
 }

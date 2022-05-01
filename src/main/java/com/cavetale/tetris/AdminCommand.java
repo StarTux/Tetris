@@ -25,6 +25,9 @@ public final class AdminCommand extends AbstractCommand<TetrisPlugin> {
         rootNode.addChild("shift").denyTabCompletion()
             .description("Shift up")
             .playerCaller(this::shift);
+        rootNode.addChild("educate").denyTabCompletion()
+            .description("Spam keybinds")
+            .playerCaller(this::educate);
         CommandNode tournamentNode = rootNode.addChild("tournament")
             .description("Tournament commands");
         tournamentNode.addChild("enable").denyTabCompletion()
@@ -65,6 +68,10 @@ public final class AdminCommand extends AbstractCommand<TetrisPlugin> {
         }
         session.getGame().shiftUp();
         player.sendMessage(text("Shifted up", YELLOW));
+    }
+
+    private void educate(Player player) {
+        TetrisGame.educate(player);
     }
 
     private void tournamentEnable(CommandSender sender) {

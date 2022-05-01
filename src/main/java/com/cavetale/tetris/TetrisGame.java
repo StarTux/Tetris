@@ -24,6 +24,7 @@ import org.bukkit.entity.TNTPrimed;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 import static net.kyori.adventure.text.Component.join;
+import static net.kyori.adventure.text.Component.keybind;
 import static net.kyori.adventure.text.Component.space;
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.JoinConfiguration.noSeparators;
@@ -71,6 +72,33 @@ public final class TetrisGame {
         teleportHome(p);
         p.sendExperienceChange((float) (lines % 10) / 10.0f, level);
         p.playSound(p.getLocation(), Sound.ENTITY_WITHER_SPAWN, SoundCategory.MASTER, 0.5f, 2.0f);
+        educate(p);
+    }
+
+    protected static void educate(Player p) {
+        for (Hotbar hotbar : Hotbar.values()) {
+            List<Component> components = new ArrayList<>();
+            components.add(space());
+            if (hotbar == Hotbar.NEUTRAL) {
+                components.add(text("[", GRAY));
+                components.add(keybind("key.drop"));
+                components.add(text("]", GRAY));
+                components.add(space());
+            } else {
+                components.add(text("[", GRAY));
+                components.add(keybind("key.hotbar." + (hotbar.slot + 1)));
+                components.add(text("]", GRAY));
+                if (hotbar.slot == Hotbar.NEUTRAL.slot - 1) {
+                    components.add(text("/scroll up", GRAY));
+                } else if (hotbar.slot == Hotbar.NEUTRAL.slot + 1) {
+                    components.add(text("/scroll down", GRAY));
+                }
+                components.add(space());
+                components.add(hotbar.mytems.component);
+            }
+            components.add(hotbar.text);
+            p.sendMessage(join(noSeparators(), components));
+        }
     }
 
     public void disable() {
@@ -392,6 +420,26 @@ public final class TetrisGame {
         case HOME:
             teleportHome(p);
         default: break;
+        }
+    }
+
+    public void playerInputDrop(Player p) {
+        if (state != GameState.FALL) {
+            bit(p, 0.5f);
+            return;
+        }
+        p.sendActionBar(text("Drop", GREEN));
+        boolean success = false;
+        drawBlock(false);
+        while (block.getY() > 0 && doesBlockFitAt(block.getX(), block.getY() - 1)) {
+            block.setY(block.getY() - 1);
+            success = true;
+        }
+        drawBlock(true);
+        if (success) {
+            bit(p, 2.0f);
+        } else {
+            bit(p, 0.5f);
         }
     }
 
