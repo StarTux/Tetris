@@ -132,7 +132,8 @@ public final class Tournament {
             trophies.add(new SQLTrophy(rank.uuid(), "tetris_tournament",
                                        placement,
                                        TrophyCategory.TETRIS,
-                                       plugin.tetrisTitle, "You earned " + rank.score() + " point" + (rank.score() != 1 ? "s" : "")));
+                                       join(noSeparators(), plugin.tetrisTitle, text(" Tournament", GREEN)),
+                                       "You earned " + rank.score() + " point" + (rank.score() != 1 ? "s" : "")));
             count += 1;
         }
         Trophies.insertTrophies(trophies);
