@@ -81,7 +81,9 @@ public final class Sessions implements Listener {
         List<Component> l = new ArrayList<>();
         l.add(plugin.tetrisTitle);
         if (game != null) game.getSidebarLines(l);
-        if (plugin.getTournament() != null) plugin.getTournament().getSidebarLines(l);
+        if (plugin.getTournament() != null) {
+            plugin.getTournament().getSidebarLines(session, l);
+        }
         if (l != null && !l.isEmpty()) {
             event.add(plugin, Priority.HIGHEST, l);
         }
