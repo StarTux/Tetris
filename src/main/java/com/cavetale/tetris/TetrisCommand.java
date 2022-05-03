@@ -100,8 +100,8 @@ public final class TetrisCommand extends AbstractCommand<TetrisPlugin> {
         }
         sender.sendMessage(join(separator(space()), plugin.tetrisTitle, text("Highscore", GOLD)));
         if (my != null && !list.contains(my)) {
-            sender.sendMessage(join(separator(space()),
-                                    text("Your top score", GRAY),
+            sender.sendMessage(join(noSeparators(),
+                                    text("Personal best ", GRAY),
                                     rankComponent(my)));
         }
         for (int i = 0; i < 10; i += 1) {
