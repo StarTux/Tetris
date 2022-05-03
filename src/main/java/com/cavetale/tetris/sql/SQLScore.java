@@ -11,7 +11,10 @@ import lombok.Data;
 
 @Data
 @Table(name = "scores",
-       indexes = @Index(name = "score", columnList = "score", unique = false))
+       indexes = {
+           @Index(name = "score", columnList = "score", unique = false),
+           @Index(name = "player", columnList = "player", unique = false),
+       })
 public final class SQLScore {
     @Id
     private Integer id;
