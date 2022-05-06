@@ -331,6 +331,12 @@ public final class TetrisGame {
         }
     }
 
+    private void resetFallingTicks() {
+        fallingTicks = battle != null
+            ? 10 - level
+            : 20 - level;
+    }
+
     private GameState tickState(GameState currentState) {
         switch (currentState) {
         case FALL: return tickFall();
@@ -353,7 +359,7 @@ public final class TetrisGame {
         drawBlock(false);
         block.setY(block.getY() - 1);
         drawBlock(true);
-        fallingTicks = 20 - level;
+        resetFallingTicks();
         return null;
     }
 
@@ -404,6 +410,7 @@ public final class TetrisGame {
                 drawBlock(false);
                 block.setY(block.getY() - 1);
                 drawBlock(true);
+                resetFallingTicks();
                 p.sendActionBar(text("Down", GREEN));
                 bit(p, 1.0f);
             }
@@ -434,6 +441,7 @@ public final class TetrisGame {
         }
         drawBlock(true);
         if (success) {
+            resetFallingTicks();
             bit(p, 2.0f);
         } else {
             bit(p, 0.5f);
