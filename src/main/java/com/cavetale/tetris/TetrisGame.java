@@ -256,6 +256,7 @@ public final class TetrisGame {
                                                    text(Unicode.tiny("final score ") + score, GRAY)));
                 if (score > 0) {
                     TetrisPlugin.instance.database.insertAsync(new SQLScore(this), null);
+                    TetrisPlugin.instance.getTetrisCommand().rebuildHighscores();
                 }
                 stateTicks = 0;
             } else {
@@ -489,6 +490,7 @@ public final class TetrisGame {
                        text("]", GRAY)));
         l.add(join(separator(space()), text(Unicode.tiny("score"), GRAY), text("" + score, WHITE)));
         l.add(join(separator(space()), text(Unicode.tiny("level"), GRAY), text("" + level, WHITE)));
+        l.add(join(separator(space()), text(Unicode.tiny("lines"), GRAY), text("" + lines, WHITE)));
         if (battle != null) {
             l.add(text(Unicode.tiny("opponents"), GOLD, ITALIC));
             List<TetrisGame> games = new ArrayList<>(battle.getGames());

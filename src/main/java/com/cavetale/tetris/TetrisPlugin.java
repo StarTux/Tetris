@@ -21,7 +21,7 @@ import static net.kyori.adventure.text.format.TextDecoration.*;
 
 public final class TetrisPlugin extends JavaPlugin {
     @Getter protected static TetrisPlugin instance;
-    private TetrisCommand tetrisCommand = new TetrisCommand(this);
+    @Getter private TetrisCommand tetrisCommand = new TetrisCommand(this);
     private AdminCommand adminCommand = new AdminCommand(this);
     private EventListener eventListener = new EventListener(this);
     protected Sessions sessions = new Sessions(this);
