@@ -100,6 +100,9 @@ public final class TetrisBoard {
                 set(x, y, get(x, y + 1));
             }
         }
+        for (int x = 0; x < width; x += 1) {
+            set(x, height - 1, 0);
+        }
     }
 
     public void clearRow(int y) {
