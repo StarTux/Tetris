@@ -6,6 +6,7 @@ import com.cavetale.mytems.util.BlockColor;
 import com.cavetale.mytems.util.Items;
 import com.cavetale.tetris.sql.SQLScore;
 import com.cavetale.worldmarker.entity.EntityMarker;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -31,6 +32,7 @@ import static net.kyori.adventure.text.JoinConfiguration.noSeparators;
 import static net.kyori.adventure.text.JoinConfiguration.separator;
 import static net.kyori.adventure.text.format.NamedTextColor.*;
 import static net.kyori.adventure.text.format.TextDecoration.*;
+import static net.kyori.adventure.title.Title.Times.times;
 import static net.kyori.adventure.title.Title.title;
 
 @Getter @RequiredArgsConstructor
@@ -285,7 +287,10 @@ public final class TetrisGame {
                     if (newLevel > level) {
                         level = newLevel;
                         p.showTitle(title(text("" + level, GREEN),
-                                                           text(Unicode.tiny("levelup"), GREEN)));
+                                          text(Unicode.tiny("levelup"), GREEN),
+                                          times(Duration.ofSeconds(0),
+                                                Duration.ofSeconds(1),
+                                                Duration.ofSeconds(0))));
                         p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, SoundCategory.MASTER, 0.5f, 2.0f);
                     }
                     p.sendExperienceChange((float) (lines % 10) / 10.0f, level);
