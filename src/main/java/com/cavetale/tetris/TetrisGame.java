@@ -256,6 +256,10 @@ public final class TetrisGame {
                 state = GameState.LOSE;
                 player.getPlayer().showTitle(title(text("GAME OVER", RED),
                                                    text(Unicode.tiny("final score ") + score, GRAY)));
+                player.getPlayer().sendMessage(join(separator(space()),
+                                                    text("GAME OVER", RED),
+                                                    text(Unicode.tiny("Final score"), GRAY),
+                                                    text(score, GOLD)));
                 if (score > 0) {
                     TetrisPlugin.instance.database.insertAsync(new SQLScore(this), null);
                     TetrisPlugin.instance.getTetrisCommand().rebuildHighscores();
