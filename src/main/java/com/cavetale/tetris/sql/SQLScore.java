@@ -1,6 +1,7 @@
 package com.cavetale.tetris.sql;
 
 import com.cavetale.tetris.TetrisGame;
+import com.winthier.sql.SQLRow;
 import java.util.Date;
 import java.util.UUID;
 import javax.persistence.Column;
@@ -15,7 +16,7 @@ import lombok.Data;
            @Index(name = "score", columnList = "score", unique = false),
            @Index(name = "player", columnList = "player", unique = false),
        })
-public final class SQLScore {
+public final class SQLScore implements SQLRow {
     @Id
     private Integer id;
     @Column(nullable = false)
