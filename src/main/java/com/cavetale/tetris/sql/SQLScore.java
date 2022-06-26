@@ -1,33 +1,20 @@
 package com.cavetale.tetris.sql;
 
 import com.cavetale.tetris.TetrisGame;
+import com.winthier.sql.SQLRow.Name;
+import com.winthier.sql.SQLRow.NotNull;
 import com.winthier.sql.SQLRow;
 import java.util.Date;
 import java.util.UUID;
-import javax.persistence.Column;
-import javax.persistence.Id;
-import javax.persistence.Index;
-import javax.persistence.Table;
 import lombok.Data;
 
-@Data
-@Table(name = "scores",
-       indexes = {
-           @Index(name = "score", columnList = "score", unique = false),
-           @Index(name = "player", columnList = "player", unique = false),
-       })
+@Data @NotNull @Name("scores")
 public final class SQLScore implements SQLRow {
-    @Id
-    private Integer id;
-    @Column(nullable = false)
-    private UUID player;
-    @Column(nullable = false)
-    private Date time;
-    @Column(nullable = false)
-    private int score;
-    @Column(nullable = false)
+    @Id private Integer id;
+    @Keyed private UUID player;
+    @Default("NOW()") private Date time;
+    @Keyed private int score;
     private int lines;
-    @Column(nullable = false)
     private int level;
 
     public SQLScore() { }

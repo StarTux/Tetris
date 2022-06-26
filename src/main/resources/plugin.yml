@@ -2,13 +2,13 @@ main: com.cavetale.tetris.TetrisPlugin
 name: Tetris
 
 version: 0.1
-api-version: 1.18
+api-version: 1.19
 
 description: Tetris Minigame
 author: StarTux
 website: https://github.com/StarTux/Tetris
 
-depend: [Core, SQL, PlayerCache, Mytems, Area, Sidebar, WorldMarker, Fam]
+depend: [Core, SQL, PlayerCache, Mytems, Area, WorldMarker, Fam]
 softdepend: []
 
 commands:

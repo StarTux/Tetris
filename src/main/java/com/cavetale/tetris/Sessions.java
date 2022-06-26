@@ -1,7 +1,7 @@
 package com.cavetale.tetris;
 
-import com.cavetale.sidebar.PlayerSidebarEvent;
-import com.cavetale.sidebar.Priority;
+import com.cavetale.core.event.hud.PlayerHudEvent;
+import com.cavetale.core.event.hud.PlayerHudPriority;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +19,8 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
+import org.spigotmc.event.player.PlayerSpawnLocationEvent;
 import static net.kyori.adventure.text.format.NamedTextColor.*;
 import static net.kyori.adventure.text.format.TextDecoration.*;
 
@@ -75,7 +77,7 @@ public final class Sessions implements Listener {
     }
 
     @EventHandler
-    private void onPlayerSidebar(PlayerSidebarEvent event) {
+    private void onPlayerHud(PlayerHudEvent event) {
         TetrisPlayer session = of(event.getPlayer());
         TetrisGame game = session.getGame();
         List<Component> l = new ArrayList<>();
@@ -85,7 +87,7 @@ public final class Sessions implements Listener {
             plugin.getTournament().getSidebarLines(session, l);
         }
         if (l != null && !l.isEmpty()) {
-            event.add(plugin, Priority.HIGHEST, l);
+            event.sidebar(PlayerHudPriority.HIGHEST, l);
         }
     }
 
@@ -105,5 +107,15 @@ public final class Sessions implements Listener {
         if (game == null) return;
         event.setCancelled(true);
         game.playerInputDrop(player);
+    }
+
+    @EventHandler
+    private void onPlayerSpawnLocation(PlayerSpawnLocationEvent event) {
+        event.setSpawnLocation(Bukkit.getWorld("tetris").getSpawnLocation());
+    }
+
+    @EventHandler
+    private void onPlayerRespawn(PlayerRespawnEvent event) {
+        event.setRespawnLocation(Bukkit.getWorld("tetris").getSpawnLocation());
     }
 }

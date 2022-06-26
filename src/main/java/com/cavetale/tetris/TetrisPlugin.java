@@ -45,7 +45,7 @@ public final class TetrisPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        database.registerTables(SQLScore.class);
+        database.registerTables(List.of(SQLScore.class));
         database.createAllTables();
         tetrisCommand.enable();
         adminCommand.enable();
