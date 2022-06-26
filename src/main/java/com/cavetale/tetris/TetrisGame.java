@@ -1,7 +1,10 @@
 package com.cavetale.tetris;
 
 import com.cavetale.area.struct.Vec3i;
-import com.cavetale.core.font.Unicode;
+import com.cavetale.core.event.hud.PlayerHudEvent;
+import com.cavetale.core.event.hud.PlayerHudPriority;
+import static com.cavetale.core.font.Unicode.tiny;
+import com.cavetale.mytems.item.font.Glyph;
 import com.cavetale.mytems.util.BlockColor;
 import com.cavetale.mytems.util.Items;
 import com.cavetale.tetris.sql.SQLScore;
@@ -13,6 +16,7 @@ import java.util.List;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -20,8 +24,11 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
+import org.bukkit.block.BlockFace;
+import org.bukkit.entity.GlowItemFrame;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TNTPrimed;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 import static net.kyori.adventure.text.Component.join;
@@ -57,6 +64,7 @@ public final class TetrisGame {
     @Setter private WorldSlice slice;
     private final List<Tetromino> tetrominos = new ArrayList<>();
     private int tetrominoIndex;
+    private List<GlowItemFrame> itemFrames = new ArrayList<>();
 
     public void initialize(Player p) {
         board = new TetrisBoard(10, 20);
@@ -72,9 +80,9 @@ public final class TetrisGame {
         drawBoard();
         drawBlock(true);
         teleportHome(p);
-        p.sendExperienceChange((float) (lines % 10) / 10.0f, level);
         p.playSound(p.getLocation(), Sound.ENTITY_WITHER_SPAWN, SoundCategory.MASTER, 0.5f, 2.0f);
         educate(p);
+        updateScoreFrame("good luck!");
     }
 
     protected static void educate(Player p) {
@@ -128,13 +136,17 @@ public final class TetrisGame {
                 }
             }
         }
+        for (GlowItemFrame itemFrame : itemFrames) {
+            itemFrame.remove();
+        }
+        itemFrames.clear();
     }
 
     private void drawFrame() {
         for (int y = -1; y <= board.height; y += 1) {
             for (int x = -1; x <= board.width; x += 1) {
                 if ((x == -1 || x == board.width) || (y == -1 || y == board.height)) {
-                    Material frameMaterial = Material.DEEPSLATE_BRICKS;
+                    Material frameMaterial = Material.POLISHED_BLACKSTONE;
                     place.getBlockAt(x, y, -1).setType(frameMaterial, false);
                     place.getBlockAt(x, y, 0).setType(frameMaterial, false);
                     place.getBlockAt(x, y, 1).setType(frameMaterial, false);
@@ -143,6 +155,25 @@ public final class TetrisGame {
                     place.getBlockAt(x, y, 1).setType(Material.LIGHT, false);
                 }
             }
+        }
+        for (int x = board.width - 1; x >= 0; x -= 1) {
+            Location location = place.getBlockAt(x, board.height, 2).getLocation().add(0.5, 0.5, 0.0);
+            GlowItemFrame itemFrame = location.getWorld().spawn(location, GlowItemFrame.class, e -> {
+                    e.setPersistent(false);
+                    e.setVisible(false);
+                    e.setFixed(true);
+                    e.setFacingDirection(BlockFace.SOUTH);
+                });
+            itemFrames.add(itemFrame);
+        }
+    }
+
+    private void updateScoreFrame(String text) {
+        List<ItemStack> items = Glyph.toItemStacks(text);
+        for (int i = 0; i < itemFrames.size(); i += 1) {
+            GlowItemFrame itemFrame = itemFrames.get(i);
+            int ii = items.size() - 1 - i;
+            itemFrame.setItem(ii < 0 ? null : items.get(ii));
         }
     }
 
@@ -224,7 +255,7 @@ public final class TetrisGame {
     private void tick() {
         if (battle != null && battle.findWinner() == this) {
             player.getPlayer().showTitle(title(text("VICTOR", GREEN, BOLD),
-                                               text(Unicode.tiny("final score ") + score, GRAY)));
+                                               text(tiny("final score ") + score, GRAY)));
             TetrisPlugin.instance.onVictory(this, battle);
             battle.disable();
             disable();
@@ -255,10 +286,10 @@ public final class TetrisGame {
             if (lost[0]) {
                 state = GameState.LOSE;
                 player.getPlayer().showTitle(title(text("GAME OVER", RED),
-                                                   text(Unicode.tiny("final score ") + score, GRAY)));
+                                                   text(tiny("final score ") + score, GRAY)));
                 player.getPlayer().sendMessage(join(separator(space()),
                                                     text("GAME OVER", RED),
-                                                    text(Unicode.tiny("Final score"), GRAY),
+                                                    text(tiny("Final score"), GRAY),
                                                     text(score, GOLD)));
                 if (score > 0) {
                     TetrisPlugin.instance.database.insertAsync(new SQLScore(this), null);
@@ -279,6 +310,7 @@ public final class TetrisGame {
                     lines += newLines;
                     int scoreBonus = scoreBonus(newLines) * (level + 1);
                     score += scoreBonus;
+                    updateScoreFrame("" + score);
                     battleScore += scoreBonus;
                     if (battle != null) {
                         for (TetrisGame other : battle.getGames()) {
@@ -291,13 +323,12 @@ public final class TetrisGame {
                     if (newLevel > level) {
                         level = newLevel;
                         p.showTitle(title(text("" + level, GREEN),
-                                          text(Unicode.tiny("levelup"), GREEN),
+                                          text(tiny("levelup"), GREEN),
                                           times(Duration.ofSeconds(0),
                                                 Duration.ofSeconds(1),
                                                 Duration.ofSeconds(0))));
                         p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, SoundCategory.MASTER, 0.5f, 2.0f);
                     }
-                    p.sendExperienceChange((float) (lines % 10) / 10.0f, level);
                     for (int y : fullRows) {
                         board.clearRow(y);
                         for (int x = 0; x < board.width; x += 1) {
@@ -501,15 +532,15 @@ public final class TetrisGame {
             l.add(text("GAME OVER", RED, BOLD));
         }
         l.add(join(noSeparators(),
-                       text(Unicode.tiny("next"), GRAY),
+                       text(tiny("next"), GRAY),
                        text(" [", GRAY),
                        nextBlock.mytems.component,
                        text("]", GRAY)));
-        l.add(join(separator(space()), text(Unicode.tiny("score"), GRAY), text("" + score, WHITE)));
-        l.add(join(separator(space()), text(Unicode.tiny("level"), GRAY), text("" + level, WHITE)));
-        l.add(join(separator(space()), text(Unicode.tiny("lines"), GRAY), text("" + lines, WHITE)));
+        l.add(join(separator(space()), text(tiny("score"), GRAY), text("" + score, WHITE)));
+        l.add(join(separator(space()), text(tiny("level"), GRAY), text("" + level, WHITE)));
+        l.add(join(separator(space()), text(tiny("lines"), GRAY), text("" + lines, WHITE)));
         if (battle != null) {
-            l.add(text(Unicode.tiny("opponents"), GOLD, ITALIC));
+            l.add(text(tiny("opponents"), GOLD, ITALIC));
             List<TetrisGame> games = new ArrayList<>(battle.getGames());
             games.remove(this);
             Collections.sort(games, (a, b) -> Integer.compare(b.getScore(), a.getScore()));
@@ -525,6 +556,21 @@ public final class TetrisGame {
                                (p != null ? p.displayName() : text(other.getPlayer().getName(), WHITE))));
             }
         }
+    }
+
+    public void bossbar(PlayerHudEvent event) {
+        event.bossbar(PlayerHudPriority.HIGH,
+                      join(noSeparators(),
+                           text(tiny("next"), GRAY),
+                           text("["),
+                           nextBlock.mytems.component,
+                           text("]"),
+                           space(),
+                           text(tiny("lvl"), GRAY),
+                           text("" + level)),
+                      BossBar.Color.BLUE,
+                      BossBar.Overlay.PROGRESS,
+                      ((float) (lines % 10)) / 10.0f);
     }
 
     public void shiftUp() {
