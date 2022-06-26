@@ -73,9 +73,22 @@ public final class TetrisPlugin extends JavaPlugin {
         }
         WorldSlice slice = allocator.dealSlice();
         if (slice == null) return null;
-        Block block = allocator.getWorld().getHighestBlockAt(slice.x, slice.z);
-        while (!block.isEmpty()) block = block.getRelative(0, 1, 0);
-        block = block.getRelative(0, 16, 0);
+        int y = (int) allocator.getWorld().getSpawnLocation().getY();
+        Block block = allocator.getWorld().getBlockAt(slice.x, y, slice.z);
+        do {
+            boolean allEmpty = true;
+            LOOP: for (int x = 0; x < 12; x += 1) {
+                for (int z = 0; z < 12; z += 1) {
+                    if (!block.getRelative(x, 0, z).isEmpty()) {
+                        allEmpty = false;
+                        break LOOP;
+                    }
+                }
+            }
+            if (allEmpty) break;
+            block = block.getRelative(0, 1, 0);
+        } while (block.getY() < allocator.getWorld().getMaxHeight());
+        block = block.getRelative(0, 8, 0);
         TetrisPlace place = new TetrisPlace(block, BlockFace.EAST, BlockFace.SOUTH);
         Vec3i home = Vec3i.of(block).add(5, 10, 20);
         TetrisGame game = new TetrisGame(session, place, home);
