@@ -125,7 +125,7 @@ public final class AdminCommand extends AbstractCommand<TetrisPlugin> {
         int amount = CommandArgCompleter.requireInt(args[1], i -> i != 0);
         plugin.getTournament().addRank(target.uuid, amount);
         plugin.getTournament().save();
-        plugin.getTournament().updateHighscoreList();
+        plugin.getTournament().computeHighscore();
         sender.sendMessage(text("Rank of " + target.getName() + " adjusted by " + amount, AQUA));
         return true;
     }
@@ -136,7 +136,7 @@ public final class AdminCommand extends AbstractCommand<TetrisPlugin> {
         }
         plugin.getTournament().getTag().getRanks().clear();
         plugin.getTournament().save();
-        plugin.getTournament().updateHighscoreList();
+        plugin.getTournament().computeHighscore();
         sender.sendMessage(text("Ranks cleared!", AQUA));
     }
 

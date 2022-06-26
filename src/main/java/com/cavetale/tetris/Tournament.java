@@ -2,11 +2,9 @@ package com.cavetale.tetris;
 
 import com.cavetale.core.font.Unicode;
 import com.cavetale.core.util.Json;
-import com.cavetale.fam.trophy.SQLTrophy;
-import com.cavetale.fam.trophy.Trophies;
+import com.cavetale.fam.trophy.Highscore;
 import com.cavetale.mytems.item.font.Glyph;
 import com.cavetale.mytems.item.trophy.TrophyCategory;
-import com.winthier.playercache.PlayerCache;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,7 +22,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 import static net.kyori.adventure.text.Component.empty;
 import static net.kyori.adventure.text.Component.join;
-import static net.kyori.adventure.text.Component.space;
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.JoinConfiguration.noSeparators;
 import static net.kyori.adventure.text.format.NamedTextColor.*;
@@ -36,7 +33,8 @@ public final class Tournament {
     @Getter private Tag tag;
     private BukkitTask task;
     @Getter @Setter private boolean auto = false;
-    private List<Rank> highscore = List.of();
+    private List<Highscore> highscore = List.of();
+    private List<Component> highscoreLines = List.of();
 
     public void enable() {
         load();
@@ -52,7 +50,7 @@ public final class Tournament {
 
     public void load() {
         tag = Json.load(new File(plugin.getDataFolder(), "tournament.json"), Tag.class, Tag::new);
-        updateHighscoreList();
+        computeHighscore();
     }
 
     public void save() {
@@ -70,7 +68,7 @@ public final class Tournament {
             }
         }
         save();
-        updateHighscoreList();
+        computeHighscore();
     }
 
     public void addRank(UUID uuid, int rank) {
@@ -83,82 +81,36 @@ public final class Tournament {
         return tag.ranks.getOrDefault(player.uuid, 0);
     }
 
-    public Rank getHighscore(UUID uuid) {
-        for (Rank it : highscore) {
+    public Highscore getHighscore(UUID uuid) {
+        for (Highscore it : highscore) {
             if (uuid.equals(it.uuid)) return it;
         }
-        return new Rank(0, uuid);
+        return new Highscore(uuid, 0);
     }
 
-    private List<Rank> computeHighscoreList() {
-        if (tag.ranks.isEmpty()) return List.of();
-        List<Rank> result = new ArrayList<>();
-        for (Map.Entry<UUID, Integer> entry : tag.ranks.entrySet()) {
-            result.add(new Rank(entry.getValue(), entry.getKey()));
-        }
-        Collections.sort(result, (a, b) -> {
-                int score = Integer.compare(b.score, a.score);
-                return score != 0
-                    ? score
-                    : String.CASE_INSENSITIVE_ORDER.compare(a.name(), b.name());
-            });
-        int placement = 0;
-        int lastScore = -1;
-        for (Rank rank : result) {
-            if (rank.score != lastScore) {
-                lastScore = rank.score;
-                placement += 1;
-            }
-            rank.placement = placement;
-        }
-        return result;
+    public void computeHighscore() {
+        this.highscore = Highscore.of(tag.ranks);
+        this.highscoreLines = Highscore.sidebar(highscore, TrophyCategory.TETRIS);
     }
 
-    public void updateHighscoreList() {
-        this.highscore = computeHighscoreList();
+    public int reward() {
+        return Highscore.reward(tag.ranks,
+                                "tetris_tournament",
+                                TrophyCategory.TETRIS,
+                                join(noSeparators(), plugin.tetrisTitle, text(" Tournament", GREEN)),
+                                hi -> "You earned " + hi.score + " point" + (hi.score != 1 ? "s" : ""));
     }
 
     public void getSidebarLines(TetrisPlayer p, List<Component> l) {
         if (highscore.isEmpty()) return;
         l.add(text(Unicode.tiny("tournament"), GOLD, ITALIC));
-        Rank playerRank = getHighscore(p.uuid);
+        Highscore playerRank = getHighscore(p.uuid);
         l.add(join(noSeparators(), text("Your score ", GRAY),
-                   (playerRank.placement > 1
-                    ? Glyph.toComponent("" + playerRank.placement)
+                   (playerRank.getPlacement() > 1
+                    ? Glyph.toComponent("" + playerRank.getPlacement())
                     : empty()),
                    text(Unicode.subscript("" + playerRank.score), GOLD)));
-        for (int i = 0; i < 10; i += 1) {
-            if (i >= highscore.size()) break;
-            Rank rank = highscore.get(i);
-            l.add(join(noSeparators(),
-                       Glyph.toComponent("" + rank.placement),
-                       text(Unicode.subscript("" + rank.score), GOLD),
-                       space(),
-                       rank.displayName()));
-        }
-    }
-
-    public int reward() {
-        updateHighscoreList();
-        if (highscore.isEmpty()) return 0;
-        int count = 0;
-        List<SQLTrophy> trophies = new ArrayList<>();
-        for (Rank rank : highscore) {
-            if (rank.placement <= 3) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "titles unlockset " + rank.name() + " Tetromino");
-            }
-            trophies.add(new SQLTrophy(rank.uuid, "tetris_tournament",
-                                       rank.placement,
-                                       TrophyCategory.TETRIS,
-                                       join(noSeparators(), plugin.tetrisTitle, text(" Tournament", GREEN)),
-                                       "You earned " + rank.score + " point" + (rank.score != 1 ? "s" : "")));
-            count += 1;
-        }
-        Trophies.insertTrophies(trophies);
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            Korobeniki.play(player);
-        }
-        return count;
+        l.addAll(highscoreLines);
     }
 
     private void tick() {
@@ -201,23 +153,5 @@ public final class Tournament {
     @Data
     public static final class Tag {
         protected Map<UUID, Integer> ranks = new HashMap<>();
-    }
-
-    @RequiredArgsConstructor
-    private static class Rank {
-        public final int score;
-        public final UUID uuid;
-        protected int placement;
-
-        public String name() {
-            return PlayerCache.nameForUuid(uuid);
-        }
-
-        public Component displayName() {
-            Player player = Bukkit.getPlayer(uuid);
-            return player != null
-                ? player.displayName()
-                : text(name());
-        }
     }
 }
