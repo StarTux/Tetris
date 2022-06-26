@@ -108,7 +108,7 @@ public final class Tournament {
         }
         Highscore playerRank = getHighscore(p.uuid);
         l.add(join(noSeparators(), text("Your score ", GRAY),
-                   (playerRank.getPlacement() > 1
+                   (playerRank.getPlacement() > 0
                     ? Glyph.toComponent("" + playerRank.getPlacement())
                     : Mytems.QUESTION_MARK),
                    text(Unicode.subscript("" + playerRank.score), GOLD)));
