@@ -59,14 +59,13 @@ public final class Tournament {
         Json.save(new File(plugin.getDataFolder(), "tournament.json"), tag, true);
     }
 
+    public void onGameOver(TetrisGame game, TetrisBattle battle) {
+        plugin.getLogger().info("Kicking " + game.getPlayer().getPlayer().getName() + " because they are afk");
+        if (game.getLines() == 0) game.getPlayer().getPlayer().kick(text("afk"));
+    }
+
     public void onVictory(TetrisGame winner, TetrisBattle battle) {
-        for (TetrisGame game : battle.getGames()) {
-            if (winner == game) {
-                addRank(game.getPlayer().uuid, 1);
-            } else {
-                addRank(game.getPlayer().uuid, 0);
-            }
-        }
+        addRank(winner.getPlayer().getUuid(), 1);
         save();
         computeHighscore();
     }
@@ -125,6 +124,9 @@ public final class Tournament {
             int rank = tag.ranks.getOrDefault(player.getUniqueId(), 0);
             map.computeIfAbsent(rank, i -> new ArrayList<>()).add(player);
         }
+        if (map.get(0) != null && map.get(0).size() == 1 && map.get(1) != null) {
+            map.get(1).addAll(map.remove(0));
+        }
         for (Map.Entry<Integer, List<Player>> entry : map.entrySet()) {
             int rank = entry.getKey();
             List<Player> list = entry.getValue();
@@ -133,7 +135,8 @@ public final class Tournament {
             while (list.size() >= 2) {
                 TetrisBattle battle = new TetrisBattle();
                 List<String> names = new ArrayList<>();
-                for (int i = 0; i < 4; i += 1) {
+                int max = list.size() == 3 ? 3 : 2;
+                for (int i = 0; i < max; i += 1) {
                     Player player = list.remove(list.size() - 1);
                     TetrisGame game = plugin.startGame(player);
                     battle.getGames().add(game);

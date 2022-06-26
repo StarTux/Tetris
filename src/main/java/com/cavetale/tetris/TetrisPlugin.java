@@ -65,6 +65,10 @@ public final class TetrisPlugin extends JavaPlugin {
         if (tournament != null) tournament.onVictory(game, battle);
     }
 
+    public void onGameOver(TetrisGame game, TetrisBattle battle) {
+        if (tournament != null) tournament.onGameOver(game, battle);
+    }
+
     public TetrisGame startGame(Player player) {
         TetrisPlayer session = sessions.of(player);
         if (session.getGame() != null) {

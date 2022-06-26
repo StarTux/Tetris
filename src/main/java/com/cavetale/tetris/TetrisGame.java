@@ -295,6 +295,9 @@ public final class TetrisGame {
                     TetrisPlugin.instance.database.insertAsync(new SQLScore(this), null);
                     TetrisPlugin.instance.getTetrisCommand().rebuildHighscores();
                 }
+                if (battle != null) {
+                    TetrisPlugin.instance.onGameOver(this, battle);
+                }
                 stateTicks = 0;
             } else {
                 board.paste(block.getBoard(), block.getX(), block.getY());

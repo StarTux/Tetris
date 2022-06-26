@@ -3,6 +3,7 @@ package com.cavetale.tetris;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 public final class TetrisBattle {
