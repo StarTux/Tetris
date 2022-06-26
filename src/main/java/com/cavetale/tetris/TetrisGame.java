@@ -543,7 +543,7 @@ public final class TetrisGame {
         l.add(join(separator(space()), text(tiny("level"), GRAY), text("" + level, WHITE)));
         l.add(join(separator(space()), text(tiny("lines"), GRAY), text("" + lines, WHITE)));
         if (battle != null) {
-            l.add(text(tiny("opponents"), GOLD, ITALIC));
+            l.add(text(tiny("opponents"), GOLD));
             List<TetrisGame> games = new ArrayList<>(battle.getGames());
             games.remove(this);
             Collections.sort(games, (a, b) -> Integer.compare(b.getScore(), a.getScore()));

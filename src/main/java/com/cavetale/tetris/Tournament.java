@@ -3,6 +3,7 @@ package com.cavetale.tetris;
 import com.cavetale.core.font.Unicode;
 import com.cavetale.core.util.Json;
 import com.cavetale.fam.trophy.Highscore;
+import com.cavetale.mytems.Mytems;
 import com.cavetale.mytems.item.font.Glyph;
 import com.cavetale.mytems.item.trophy.TrophyCategory;
 import java.io.File;
@@ -20,7 +21,6 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
-import static net.kyori.adventure.text.Component.empty;
 import static net.kyori.adventure.text.Component.join;
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.JoinConfiguration.noSeparators;
@@ -101,13 +101,16 @@ public final class Tournament {
     }
 
     public void getSidebarLines(TetrisPlayer p, List<Component> l) {
-        if (highscore.isEmpty()) return;
-        l.add(text(Unicode.tiny("tournament"), GOLD, ITALIC));
+        l.add(text(Unicode.tiny("tournament"), GOLD));
+        if (p.getGame() == null) {
+            l.add(text("Please wait until a", WHITE, ITALIC));
+            l.add(text("game becomes available", WHITE, ITALIC));
+        }
         Highscore playerRank = getHighscore(p.uuid);
         l.add(join(noSeparators(), text("Your score ", GRAY),
                    (playerRank.getPlacement() > 1
                     ? Glyph.toComponent("" + playerRank.getPlacement())
-                    : empty()),
+                    : Mytems.QUESTION_MARK),
                    text(Unicode.subscript("" + playerRank.score), GOLD)));
         l.addAll(highscoreLines);
     }
