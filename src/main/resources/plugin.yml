@@ -8,7 +8,7 @@ description: Tetris Minigame
 author: StarTux
 website: https://github.com/StarTux/Tetris
 
-depend: [Core, SQL, PlayerCache, Mytems, Area, WorldMarker, Fam]
+depend: [Core, SQL, PlayerCache, Mytems, WorldMarker, Fam]
 softdepend: []
 
 commands:

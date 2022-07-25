@@ -1,9 +1,8 @@
 package com.cavetale.tetris;
 
-import com.cavetale.area.struct.Vec3i;
 import com.cavetale.core.event.hud.PlayerHudEvent;
 import com.cavetale.core.event.hud.PlayerHudPriority;
-import static com.cavetale.core.font.Unicode.tiny;
+import com.cavetale.core.struct.Vec3i;
 import com.cavetale.mytems.item.font.Glyph;
 import com.cavetale.mytems.util.BlockColor;
 import com.cavetale.mytems.util.Items;
@@ -31,6 +30,7 @@ import org.bukkit.entity.TNTPrimed;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
+import static com.cavetale.core.font.Unicode.tiny;
 import static net.kyori.adventure.text.Component.join;
 import static net.kyori.adventure.text.Component.keybind;
 import static net.kyori.adventure.text.Component.space;

@@ -1,6 +1,6 @@
 package com.cavetale.tetris;
 
-import com.cavetale.area.struct.Vec3i;
+import com.cavetale.core.struct.Vec3i;
 import com.cavetale.tetris.sql.SQLScore;
 import com.winthier.sql.SQLDatabase;
 import java.util.ArrayList;

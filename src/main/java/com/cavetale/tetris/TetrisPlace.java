@@ -1,6 +1,6 @@
 package com.cavetale.tetris;
 
-import com.cavetale.area.struct.Vec3i;
+import com.cavetale.core.struct.Vec3i;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
