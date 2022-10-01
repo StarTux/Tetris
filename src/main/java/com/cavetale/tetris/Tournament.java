@@ -16,7 +16,6 @@ import java.util.UUID;
 import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -32,7 +31,8 @@ public final class Tournament {
     private final TetrisPlugin plugin;
     @Getter private Tag tag;
     private BukkitTask task;
-    @Getter @Setter private boolean auto = false;
+    @Getter private boolean auto = false;
+    private int autoCooldown = 0;
     private List<Highscore> highscore = List.of();
     private List<Component> highscoreLines = List.of();
 
@@ -116,14 +116,33 @@ public final class Tournament {
     }
 
     private void tick() {
-        if (auto) tryToBuildBattles();
+        if (auto) auto();
     }
 
-    private void tryToBuildBattles() {
-        Map<Integer, List<Player>> map = new HashMap<>();
+    private void auto() {
+        List<Player> players = getWaitingPlayers();
+        if (players.size() < 2) {
+            autoCooldown = 20 * 60;
+        } else if (autoCooldown > 0) {
+            autoCooldown -= 1;
+        } else {
+            tryToBuildBattles(players);
+            autoCooldown = 20 * 60;
+        }
+    }
+
+    private List<Player> getWaitingPlayers() {
+        List<Player> result = new ArrayList<>();
         for (Player player : Bukkit.getOnlinePlayers()) {
             TetrisPlayer session = plugin.sessions.of(player);
-            if (session.getGame() != null) continue;
+            if (session.getGame() == null) result.add(player);
+        }
+        return result;
+    }
+
+    private void tryToBuildBattles(List<Player> players) {
+        Map<Integer, List<Player>> map = new HashMap<>();
+        for (Player player : players) {
             int rank = tag.ranks.getOrDefault(player.getUniqueId(), 0);
             map.computeIfAbsent(rank, i -> new ArrayList<>()).add(player);
         }
@@ -159,5 +178,10 @@ public final class Tournament {
     @Data
     public static final class Tag {
         protected Map<UUID, Integer> ranks = new HashMap<>();
+    }
+
+    public void setAuto(boolean value) {
+        this.auto = value;
+        this.autoCooldown = 0;
     }
 }
