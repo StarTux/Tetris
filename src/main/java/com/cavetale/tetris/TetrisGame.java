@@ -3,7 +3,9 @@ package com.cavetale.tetris;
 import com.cavetale.core.event.hud.PlayerHudEvent;
 import com.cavetale.core.event.hud.PlayerHudPriority;
 import com.cavetale.core.struct.Vec3i;
+import com.cavetale.mytems.Mytems;
 import com.cavetale.mytems.item.font.Glyph;
+import com.cavetale.mytems.session.Session;
 import com.cavetale.mytems.util.BlockColor;
 import com.cavetale.mytems.util.Items;
 import com.cavetale.tetris.sql.SQLScore;
@@ -31,6 +33,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 import static com.cavetale.core.font.Unicode.tiny;
+import static com.cavetale.mytems.MytemsPlugin.sessionOf;
 import static net.kyori.adventure.text.Component.join;
 import static net.kyori.adventure.text.Component.keybind;
 import static net.kyori.adventure.text.Component.space;
@@ -125,7 +128,10 @@ public final class TetrisGame {
         TetrisPlugin.instance.games.remove(this);
         state = GameState.DISABLE;
         Player p = player.getPlayer();
-        if (p != null) p.getInventory().clear();
+        if (p != null) {
+            p.getInventory().clear();
+            sessionOf(p).setHidingPlayers(false);
+        }
     }
 
     private void clearFrame() {
@@ -466,8 +472,24 @@ public final class TetrisGame {
             break;
         case HOME:
             teleportHome(p);
+            break;
+        case EYE:
+            hidePlayers(p);
+            break;
         default: break;
         }
+    }
+
+    private void hidePlayers(Player p) {
+        Session session = sessionOf(p);
+        boolean newValue = !session.isHidingPlayers();
+        session.setHidingPlayers(newValue);
+        if (newValue) {
+            p.sendActionBar(join(noSeparators(), Mytems.BLIND_EYE, text(" Hiding other Players", GOLD)));
+        } else {
+            p.sendActionBar(join(noSeparators(), Mytems.BLIND_EYE, text(" No longer hiding other Players", AQUA)));
+        }
+        p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, SoundCategory.MASTER, 0.5f, 1.5f);
     }
 
     public void playerInputDrop(Player p) {

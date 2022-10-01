@@ -15,6 +15,7 @@ public enum Hotbar {
     LEFT(0, Mytems.ARROW_LEFT, text("Left", GREEN)),
     DOWN(1, Mytems.ARROW_DOWN, text("Down", GREEN)),
     RIGHT(2, Mytems.ARROW_RIGHT, text("Right", GREEN)),
+    EYE(3, Mytems.BLIND_EYE, text("Hide Players", BLUE)),
     HOME(4, Mytems.REDO, text("Warp Home", BLUE)),
     TURN_LEFT(6, Mytems.TURN_LEFT, text("Turn Left", GREEN)),
     TURN_RIGHT(8, Mytems.TURN_RIGHT, text("Turn Right", GREEN)),
