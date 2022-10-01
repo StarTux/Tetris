@@ -122,12 +122,12 @@ public final class Tournament {
     private void auto() {
         List<Player> players = getWaitingPlayers();
         if (players.size() < 2) {
-            autoCooldown = 20 * 60;
+            autoCooldown = 60;
         } else if (autoCooldown > 0) {
             autoCooldown -= 1;
         } else {
             tryToBuildBattles(players);
-            autoCooldown = 20 * 60;
+            autoCooldown = 60;
         }
     }
 
