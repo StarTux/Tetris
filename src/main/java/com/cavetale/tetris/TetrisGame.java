@@ -320,11 +320,11 @@ public final class TetrisGame {
                     int scoreBonus = scoreBonus(newLines) * (level + 1);
                     score += scoreBonus;
                     updateScoreFrame("" + score);
-                    battleScore += scoreBonus;
-                    if (battle != null) {
+                    if (newLines >= 4 && battle != null) {
+                        battleScore += 1;
                         for (TetrisGame other : battle.getGames()) {
                             if (other == this) continue;
-                            other.battleScore -= scoreBonus;
+                            other.battleScore -= 1;
                         }
                     }
                     int newLevel = lines / 10;
@@ -396,7 +396,7 @@ public final class TetrisGame {
     }
 
     private GameState tickFall() {
-        if (battleScore < (-100 * (level + 1))) {
+        if (battleScore < -1) {
             battleScore = 0;
             shiftUp();
         }
