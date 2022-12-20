@@ -381,9 +381,11 @@ public final class TetrisGame {
     }
 
     private void resetFallingTicks() {
-        fallingTicks = battle != null
-            ? 10 - level
-            : 20 - level;
+        if (battle != null) {
+            fallingTicks = 10 - level;
+        } else {
+            fallingTicks = 20 - (level % 20);
+        }
     }
 
     private GameState tickState(GameState currentState) {
