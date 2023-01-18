@@ -2,6 +2,9 @@ package com.cavetale.tetris;
 
 import com.cavetale.core.event.hud.PlayerHudEvent;
 import com.cavetale.core.event.hud.PlayerHudPriority;
+import com.cavetale.core.event.minigame.MinigameFlag;
+import com.cavetale.core.event.minigame.MinigameMatchCompleteEvent;
+import com.cavetale.core.event.minigame.MinigameMatchType;
 import com.cavetale.core.struct.Vec3i;
 import com.cavetale.mytems.Mytems;
 import com.cavetale.mytems.item.font.Glyph;
@@ -266,6 +269,17 @@ public final class TetrisGame {
             battle.disable();
             disable();
             Korobeniki.play(getPlayer().getPlayer());
+            do {
+                MinigameMatchCompleteEvent event = new MinigameMatchCompleteEvent(MinigameMatchType.TETRIS);
+                if (TetrisPlugin.getInstance().getTournament() != null) {
+                    event.addFlags(MinigameFlag.EVENT);
+                }
+                for (TetrisGame game : battle.getGames()) {
+                    event.addPlayerUuid(game.player.uuid);
+                }
+                event.addWinnerUuid(this.player.uuid);
+                event.callEvent();
+            } while (false);
             return;
         }
         GameState newState;
