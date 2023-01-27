@@ -1,6 +1,7 @@
 package com.cavetale.tetris;
 
 import com.cavetale.core.font.Unicode;
+import com.cavetale.core.playercache.PlayerCache;
 import com.cavetale.core.util.Json;
 import com.cavetale.fam.trophy.Highscore;
 import com.cavetale.mytems.Mytems;
@@ -93,11 +94,26 @@ public final class Tournament {
     }
 
     public int reward() {
-        return Highscore.reward(tag.ranks,
-                                "tetris_tournament",
-                                TrophyCategory.TETRIS,
-                                join(noSeparators(), plugin.tetrisTitle, text(" Tournament", GREEN)),
-                                hi -> "You earned " + hi.score + " point" + (hi.score != 1 ? "s" : ""));
+        int result = Highscore.reward(tag.ranks,
+                                      "tetris_tournament",
+                                      TrophyCategory.TETRIS,
+                                      join(noSeparators(), plugin.tetrisTitle, text(" Tournament", GREEN)),
+                                      hi -> "You earned " + hi.score + " point" + (hi.score != 1 ? "s" : ""));
+        List<String> titles = List.of("Tetromino",
+                                      "TetrisO",
+                                      "TetrisL",
+                                      "TetrisS",
+                                      "TetrisT",
+                                      "TetrisJ",
+                                      "TetrisZ",
+                                      "TetrisI");
+        List<Highscore> list = Highscore.of(tag.ranks);
+        if (list.isEmpty()) return result;
+        String winnerName = PlayerCache.nameForUuid(list.get(0).uuid);
+        String cmd = "titles unlockset " + winnerName + " " + String.join(" ", titles);
+        plugin.getLogger().info("Running command: " + cmd);
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
+        return result + 1;
     }
 
     public void getSidebarLines(TetrisPlayer p, List<Component> l) {
