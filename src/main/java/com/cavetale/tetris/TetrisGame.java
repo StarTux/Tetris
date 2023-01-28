@@ -298,8 +298,10 @@ public final class TetrisGame {
                 if (TetrisPlugin.getInstance().getTournament() != null) {
                     event.addFlags(MinigameFlag.EVENT);
                 }
-                for (TetrisGame game : battle.getGames()) {
-                    event.addPlayerUuid(game.player.uuid);
+                if (battle != null) {
+                    for (TetrisGame game : battle.getGames()) {
+                        event.addPlayerUuid(game.player.uuid);
+                    }
                 }
                 event.addWinnerUuid(this.player.uuid);
                 event.callEvent();
