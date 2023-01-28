@@ -3,7 +3,9 @@ package com.cavetale.tetris;
 import com.cavetale.mytems.Mytems;
 import lombok.RequiredArgsConstructor;
 import net.kyori.adventure.text.Component;
+import static net.kyori.adventure.text.Component.keybind;
 import static net.kyori.adventure.text.Component.text;
+import static net.kyori.adventure.text.Component.textOfChildren;
 import static net.kyori.adventure.text.format.NamedTextColor.*;
 
 /**
@@ -19,7 +21,11 @@ public enum Hotbar {
     HOME(4, Mytems.REDO, text("Warp Home", BLUE)),
     TURN_LEFT(6, Mytems.TURN_LEFT, text("Turn Left", GREEN)),
     TURN_RIGHT(8, Mytems.TURN_RIGHT, text("Turn Right", GREEN)),
-    NEUTRAL(7, Mytems.INVISIBLE_ITEM, text("Drop", RED)),
+    NEUTRAL(7, Mytems.INVISIBLE_ITEM, textOfChildren(text("[", GRAY),
+                                                     keybind("key.drop", GREEN),
+                                                     text("] Drop [", GRAY),
+                                                     keybind("key.swapOffhand", GREEN),
+                                                     text("] Swap", GRAY))),
     ;
 
     public final int slot;

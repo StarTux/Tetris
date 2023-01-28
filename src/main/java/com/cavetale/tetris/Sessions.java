@@ -2,6 +2,7 @@ package com.cavetale.tetris;
 
 import com.cavetale.core.event.hud.PlayerHudEvent;
 import com.cavetale.core.event.hud.PlayerHudPriority;
+import com.cavetale.mytems.util.Items;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +21,7 @@ import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.spigotmc.event.player.PlayerSpawnLocationEvent;
 import static net.kyori.adventure.text.format.NamedTextColor.*;
 import static net.kyori.adventure.text.format.TextDecoration.*;
@@ -73,7 +75,9 @@ public final class Sessions implements Listener {
         }
         Hotbar hotbar = Hotbar.ofSlot(event.getNewSlot());
         if (hotbar == null) return;
-        game.playerInput(player, hotbar);
+        Bukkit.getScheduler().runTask(plugin, () -> {
+                game.playerInput(player, hotbar);
+            });
     }
 
     @EventHandler
@@ -109,7 +113,24 @@ public final class Sessions implements Listener {
         TetrisGame game = session.getGame();
         if (game == null) return;
         event.setCancelled(true);
-        game.playerInputDrop(player);
+        Bukkit.getScheduler().runTask(plugin, () -> {
+                game.playerInputDrop(player);
+            });
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
+    private void onPlayerSwapHandItems(PlayerSwapHandItemsEvent event) {
+        Player player = event.getPlayer();
+        TetrisPlayer session = of(player);
+        TetrisGame game = session.getGame();
+        if (game == null) return;
+        event.setCancelled(true);
+        Bukkit.getScheduler().runTask(plugin, () -> {
+                game.playerInputSwap(player);
+                player.getInventory().setItemInOffHand(null);
+                player.getInventory().setItem(Hotbar.NEUTRAL.slot, Items.text(Hotbar.NEUTRAL.mytems.createIcon(),
+                                                                              List.of(Hotbar.NEUTRAL.text)));
+            });
     }
 
     @EventHandler

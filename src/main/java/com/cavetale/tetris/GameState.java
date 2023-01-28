@@ -7,4 +7,10 @@ public enum GameState {
     CLEAR,
     LOSE,
     DISABLE;
+
+    public boolean isDuringGame() {
+        return this == FALL
+            || this == LAND
+            || this == CLEAR;
+    }
 }

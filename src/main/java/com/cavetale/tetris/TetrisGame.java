@@ -37,10 +37,13 @@ import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 import static com.cavetale.core.font.Unicode.tiny;
 import static com.cavetale.mytems.MytemsPlugin.sessionOf;
+import static net.kyori.adventure.text.Component.empty;
 import static net.kyori.adventure.text.Component.join;
 import static net.kyori.adventure.text.Component.keybind;
+import static net.kyori.adventure.text.Component.newline;
 import static net.kyori.adventure.text.Component.space;
 import static net.kyori.adventure.text.Component.text;
+import static net.kyori.adventure.text.Component.textOfChildren;
 import static net.kyori.adventure.text.JoinConfiguration.noSeparators;
 import static net.kyori.adventure.text.JoinConfiguration.separator;
 import static net.kyori.adventure.text.format.NamedTextColor.*;
@@ -57,6 +60,7 @@ public final class TetrisGame {
     private TetrisBoard board;
     private TetrisBlock block;
     private Tetromino nextBlock;
+    private Tetromino savedBlock;
     private BukkitTask task;
     private int fallingTicks;
     private int stateTicks;
@@ -88,7 +92,8 @@ public final class TetrisGame {
         teleportHome(p);
         p.playSound(p.getLocation(), Sound.ENTITY_WITHER_SPAWN, SoundCategory.MASTER, 0.5f, 2.0f);
         educate(p);
-        updateScoreFrame("good luck!");
+        updateScoreFrame("glhf!");
+        updateNextFrames();
     }
 
     protected static void educate(Player p) {
@@ -100,6 +105,14 @@ public final class TetrisGame {
                 components.add(keybind("key.drop"));
                 components.add(text("]", GRAY));
                 components.add(space());
+                components.add(text("Drop", RED));
+                components.add(newline());
+                components.add(space());
+                components.add(text("[", GRAY));
+                components.add(keybind("key.swapOffhand"));
+                components.add(text("]", GRAY));
+                components.add(space());
+                components.add(text("Save", AQUA));
             } else {
                 components.add(text("[", GRAY));
                 components.add(keybind("key.hotbar." + (hotbar.slot + 1)));
@@ -111,8 +124,8 @@ public final class TetrisGame {
                 }
                 components.add(space());
                 components.add(hotbar.mytems.component);
+                components.add(hotbar.text);
             }
-            components.add(hotbar.text);
             p.sendMessage(join(noSeparators(), components));
         }
     }
@@ -165,7 +178,7 @@ public final class TetrisGame {
                 }
             }
         }
-        for (int x = board.width - 1; x >= 0; x -= 1) {
+        for (int x = board.width; x >= -1; x -= 1) {
             Location location = place.getBlockAt(x, board.height, 2).getLocation().add(0.5, 0.5, 0.0);
             GlowItemFrame itemFrame = location.getWorld().spawn(location, GlowItemFrame.class, e -> {
                     e.setPersistent(false);
@@ -184,6 +197,13 @@ public final class TetrisGame {
             int ii = items.size() - 1 - i;
             itemFrame.setItem(ii < 0 ? null : items.get(ii));
         }
+    }
+
+    private void updateNextFrames() {
+        itemFrames.get(itemFrames.size() - 1).setItem(nextBlock.mytems.createIcon());
+        itemFrames.get(itemFrames.size() - 2).setItem(savedBlock != null
+                                                      ? savedBlock.mytems.createIcon()
+                                                      : null);
     }
 
     private void drawBoard() {
@@ -254,6 +274,10 @@ public final class TetrisGame {
         block = new TetrisBlock(nextBlock, Rnd.tetrisBlockColor());
         block.setX(board.width / 2 - 2);
         block.setY(board.height);
+        makeNextBlock();
+    }
+
+    private void makeNextBlock() {
         if (tetrominoIndex >= tetrominos.size()) {
             tetrominoIndex = 0;
             Collections.shuffle(tetrominos);
@@ -333,7 +357,6 @@ public final class TetrisGame {
                     lines += newLines;
                     int scoreBonus = scoreBonus(newLines) * (level + 1);
                     score += scoreBonus;
-                    updateScoreFrame("" + score);
                     if (newLines >= 4 && battle != null) {
                         battleScore += level;
                         for (TetrisGame other : battle.getGames()) {
@@ -369,6 +392,8 @@ public final class TetrisGame {
                 makeNewBlock();
                 drawBlock(true);
                 stateTicks = 0;
+                updateScoreFrame("" + score + " l" + level);
+                updateNextFrames();
             }
             break;
         }
@@ -501,9 +526,9 @@ public final class TetrisGame {
         boolean newValue = !session.isHidingPlayers();
         session.setHidingPlayers(newValue);
         if (newValue) {
-            p.sendActionBar(join(noSeparators(), Mytems.BLIND_EYE, text(" Hiding other Players", GOLD)));
+            p.sendActionBar(textOfChildren(Mytems.BLIND_EYE, text(" Hiding other Players", GOLD)));
         } else {
-            p.sendActionBar(join(noSeparators(), Mytems.BLIND_EYE, text(" No longer hiding other Players", AQUA)));
+            p.sendActionBar(textOfChildren(Mytems.BLIND_EYE, text(" No longer hiding other Players", AQUA)));
         }
         p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, SoundCategory.MASTER, 0.5f, 1.5f);
     }
@@ -527,6 +552,23 @@ public final class TetrisGame {
         } else {
             bit(p, 0.5f);
         }
+    }
+
+    public void playerInputSwap(Player p) {
+        if (!state.isDuringGame()) {
+            bit(p, 0.5f);
+            return;
+        }
+        p.sendActionBar(text("Swap", GREEN));
+        Tetromino old = savedBlock;
+        savedBlock = nextBlock;
+        if (old != null) {
+            nextBlock = old;
+        } else {
+            makeNextBlock();
+        }
+        updateNextFrames();
+        bit(p, 2.0f);
     }
 
     private void move(Player p, int dx) {
@@ -572,11 +614,10 @@ public final class TetrisGame {
         if (state == GameState.LOSE) {
             l.add(text("GAME OVER", RED, BOLD));
         }
-        l.add(join(noSeparators(),
-                       text(tiny("next"), GRAY),
-                       text(" [", GRAY),
-                       nextBlock.mytems.component,
-                       text("]", GRAY)));
+        l.add(textOfChildren(text(tiny("next"), GRAY),
+                             text(" [", GRAY), nextBlock.mytems.component, text("]", GRAY)));
+        l.add(textOfChildren(text(tiny("saved"), GRAY), text(" [", GRAY),
+                             (savedBlock != null ? savedBlock.mytems.component : empty()), text("]", GRAY)));
         l.add(join(separator(space()), text(tiny("score"), GRAY), text("" + score, WHITE)));
         l.add(join(separator(space()), text(tiny("level"), GRAY), text("" + level, WHITE)));
         l.add(join(separator(space()), text(tiny("lines"), GRAY), text("" + lines, WHITE)));
@@ -601,14 +642,13 @@ public final class TetrisGame {
 
     public void bossbar(PlayerHudEvent event) {
         event.bossbar(PlayerHudPriority.HIGH,
-                      join(noSeparators(),
-                           text(tiny("next"), GRAY),
-                           text("["),
-                           nextBlock.mytems.component,
-                           text("]"),
-                           space(),
-                           text(tiny("lvl"), GRAY),
-                           text("" + level)),
+                      textOfChildren(text(tiny("next"), GRAY),
+                                     text("["),
+                                     nextBlock.mytems.component,
+                                     text("]"),
+                                     space(),
+                                     text(tiny("lvl"), GRAY),
+                                     text("" + level)),
                       BossBar.Color.BLUE,
                       BossBar.Overlay.PROGRESS,
                       ((float) (lines % 10)) / 10.0f);
