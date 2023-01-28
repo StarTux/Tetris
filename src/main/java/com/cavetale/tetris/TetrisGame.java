@@ -287,25 +287,23 @@ public final class TetrisGame {
 
     private void tick() {
         if (battle != null && battle.findWinner() == this) {
+            do {
+                MinigameMatchCompleteEvent event = new MinigameMatchCompleteEvent(MinigameMatchType.TETRIS);
+                if (TetrisPlugin.getInstance().getTournament() != null) {
+                    event.addFlags(MinigameFlag.EVENT);
+                }
+                for (TetrisGame game : battle.getGames()) {
+                    event.addPlayerUuid(game.player.uuid);
+                }
+                event.addWinnerUuid(this.player.uuid);
+                event.callEvent();
+            } while (false);
             player.getPlayer().showTitle(title(text("VICTOR", GREEN, BOLD),
                                                text(tiny("final score ") + score, GRAY)));
             TetrisPlugin.instance.onVictory(this, battle);
             battle.disable();
             disable();
             Korobeniki.play(getPlayer().getPlayer());
-            do {
-                MinigameMatchCompleteEvent event = new MinigameMatchCompleteEvent(MinigameMatchType.TETRIS);
-                if (TetrisPlugin.getInstance().getTournament() != null) {
-                    event.addFlags(MinigameFlag.EVENT);
-                }
-                if (battle != null) {
-                    for (TetrisGame game : battle.getGames()) {
-                        event.addPlayerUuid(game.player.uuid);
-                    }
-                }
-                event.addWinnerUuid(this.player.uuid);
-                event.callEvent();
-            } while (false);
             return;
         }
         GameState newState;
