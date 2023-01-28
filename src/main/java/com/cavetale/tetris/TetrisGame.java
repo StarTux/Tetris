@@ -438,7 +438,7 @@ public final class TetrisGame {
 
     private GameState tickFall() {
         if (battleScore < -level) {
-            battleScore += level;
+            battleScore = Math.max(0, battleScore + level);
             shiftUp();
         }
         fallingTicks -= 1;
