@@ -164,7 +164,7 @@ public final class Tournament {
             int rank = tag.ranks.getOrDefault(player.getUniqueId(), 0);
             map.computeIfAbsent(rank, i -> new ArrayList<>()).add(player);
         }
-        List<Integer> rankList = List.copyOf(map.keySet());
+        List<Integer> rankList = new ArrayList<>(List.copyOf(map.keySet()));
         Collections.sort(rankList);
         if (rankList.size() >= 2 && map.get(rankList.get(0)) != null && map.get(rankList.get(0)).size() == 1 && map.get(rankList.get(1)) != null) {
             map.get(rankList.get(1)).addAll(map.remove(rankList.get(0)));
