@@ -108,12 +108,14 @@ public final class Tournament {
                                       "TetrisZ",
                                       "TetrisI");
         List<Highscore> list = Highscore.of(tag.ranks);
-        if (list.isEmpty()) return result;
-        String winnerName = PlayerCache.nameForUuid(list.get(0).uuid);
-        String cmd = "titles unlockset " + winnerName + " " + String.join(" ", titles);
-        plugin.getLogger().info("Running command: " + cmd);
-        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
-        return result + 1;
+        for (int i = 0; i < list.size() && i < 3; i += 1) {
+            String winnerName = PlayerCache.nameForUuid(list.get(i).uuid);
+            String cmd = "titles unlockset " + winnerName + " " + String.join(" ", titles);
+            plugin.getLogger().info("Running command: " + cmd);
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), cmd);
+            result += 1;
+        }
+        return result;
     }
 
     public void getSidebarLines(TetrisPlayer p, List<Component> l) {
