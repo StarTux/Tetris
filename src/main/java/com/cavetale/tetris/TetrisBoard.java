@@ -166,7 +166,7 @@ public final class TetrisBoard {
         }
         List<Integer> row = new ArrayList<>();
         for (int i = 0; i < width; i += 1) {
-            row.add(i <= width / 2 ? BlockColor.WHITE.ordinal() + 1 : 0);
+            row.add(i <= width / 2 ? BlockColor.BROWN.ordinal() + 1 : 0);
         }
         Collections.shuffle(row, Rnd.get());
         for (int i = 0; i < width; i += 1) {

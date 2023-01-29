@@ -168,12 +168,12 @@ public final class TetrisGame {
         for (int y = -1; y <= board.height; y += 1) {
             for (int x = -1; x <= board.width; x += 1) {
                 if ((x == -1 || x == board.width) || (y == -1 || y == board.height)) {
-                    Material frameMaterial = Material.POLISHED_BLACKSTONE;
+                    Material frameMaterial = Material.WHITE_CONCRETE;
                     place.getBlockAt(x, y, -1).setType(frameMaterial, false);
                     place.getBlockAt(x, y, 0).setType(frameMaterial, false);
                     place.getBlockAt(x, y, 1).setType(frameMaterial, false);
                 } else {
-                    place.getBlockAt(x, y, -1).setType(Material.BLACK_STAINED_GLASS, false);
+                    place.getBlockAt(x, y, -1).setType((x % 2) == (y % 2) ? Material.BLACK_CONCRETE : Material.BLACK_TERRACOTTA, false);
                     place.getBlockAt(x, y, 1).setType(Material.LIGHT, false);
                 }
             }
@@ -271,7 +271,7 @@ public final class TetrisGame {
     }
 
     private void makeNewBlock() {
-        block = new TetrisBlock(nextBlock, Rnd.tetrisBlockColor());
+        block = new TetrisBlock(nextBlock, nextBlock.color);
         block.setX(board.width / 2 - 2);
         block.setY(board.height);
         makeNextBlock();

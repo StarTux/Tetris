@@ -1,22 +1,22 @@
 package com.cavetale.tetris;
 
 import com.cavetale.mytems.Mytems;
+import com.cavetale.mytems.util.BlockColor;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public enum Tetromino {
-    I(Mytems.TETRIS_I),
-    O(Mytems.TETRIS_O),
-    T(Mytems.TETRIS_T),
-    L(Mytems.TETRIS_L),
-    J(Mytems.TETRIS_J),
-    S(Mytems.TETRIS_S),
-    Z(Mytems.TETRIS_Z);
+    I(Mytems.TETRIS_I, BlockColor.YELLOW),
+    O(Mytems.TETRIS_O, BlockColor.RED),
+    T(Mytems.TETRIS_T, BlockColor.PINK),
+    L(Mytems.TETRIS_L, BlockColor.LIGHT_BLUE),
+    J(Mytems.TETRIS_J, BlockColor.ORANGE),
+    S(Mytems.TETRIS_S, BlockColor.LIME),
+    Z(Mytems.TETRIS_Z, BlockColor.LIGHT_GRAY);
 
     public final Mytems mytems;
+    public final BlockColor color;
     public final TetrisBoard[] boards = new TetrisBoard[4];
-
-    Tetromino(final Mytems mytems) {
-        this.mytems = mytems;
-    }
 
     private void initialize() {
         TetrisBoard board = makeBoard();
