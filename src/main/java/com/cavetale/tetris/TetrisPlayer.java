@@ -32,4 +32,8 @@ public final class TetrisPlayer {
     public Player getPlayer() {
         return Bukkit.getPlayer(uuid);
     }
+
+    public boolean is(Player p) {
+        return uuid.equals(p.getUniqueId());
+    }
 }

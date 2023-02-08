@@ -17,7 +17,7 @@ public final class EventListener implements Listener {
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-    void onEntityExplode(EntityExplodeEvent event) {
+    private void onEntityExplode(EntityExplodeEvent event) {
         if (!EntityMarker.hasId(event.getEntity(), "tetris")) return;
         event.blockList().clear();
         event.setCancelled(true);

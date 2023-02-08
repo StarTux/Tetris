@@ -28,6 +28,7 @@ public final class TetrisPlugin extends JavaPlugin {
     @Getter @Setter private Tournament tournament = null;
     @Getter protected final Allocator allocator = new Allocator(this);
     protected List<TetrisGame> games = new ArrayList<>();
+    @Getter protected TetrisMatch match = new TetrisMatch(this);
     protected SQLDatabase database = new SQLDatabase(this);
     public final Component tetrisTitle = join(noSeparators(), new Component[] {
             text("T", GOLD),
@@ -52,6 +53,7 @@ public final class TetrisPlugin extends JavaPlugin {
         eventListener.enable();
         sessions.enable();
         Bukkit.getScheduler().runTask(this, () -> allocator.enable(Bukkit.getWorld("tetris"), 24));
+        Bukkit.getScheduler().runTaskTimer(this, this::tick, 1L, 1L);
     }
 
     @Override
@@ -102,5 +104,16 @@ public final class TetrisPlugin extends JavaPlugin {
         slice.setGame(game);
         game.initialize(player);
         return game;
+    }
+
+    public TetrisGame gameOf(Player player) {
+        for (TetrisGame game : games) {
+            if (game.getPlayer().is(player)) return game;
+        }
+        return null;
+    }
+
+    private void tick() {
+        if (match.isEnabled()) match.tick();
     }
 }

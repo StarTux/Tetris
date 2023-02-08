@@ -4,6 +4,7 @@ import com.cavetale.core.command.AbstractCommand;
 import com.cavetale.core.command.CommandWarn;
 import com.cavetale.core.font.Unicode;
 import com.cavetale.core.playercache.PlayerCache;
+import com.cavetale.mytems.Mytems;
 import com.cavetale.mytems.item.font.Glyph;
 import com.cavetale.tetris.sql.SQLScore;
 import java.text.SimpleDateFormat;
@@ -14,13 +15,18 @@ import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import static net.kyori.adventure.text.Component.join;
+import static net.kyori.adventure.text.Component.newline;
 import static net.kyori.adventure.text.Component.space;
 import static net.kyori.adventure.text.Component.text;
+import static net.kyori.adventure.text.Component.textOfChildren;
 import static net.kyori.adventure.text.JoinConfiguration.noSeparators;
 import static net.kyori.adventure.text.JoinConfiguration.separator;
+import static net.kyori.adventure.text.event.ClickEvent.runCommand;
+import static net.kyori.adventure.text.event.HoverEvent.showText;
 import static net.kyori.adventure.text.format.NamedTextColor.*;
 import static net.kyori.adventure.text.format.TextDecoration.*;
 
@@ -48,6 +54,9 @@ public final class TetrisCommand extends AbstractCommand<TetrisPlugin> {
         rootNode.addChild("rank").denyTabCompletion()
             .description("Player rankings")
             .senderCaller(this::rank);
+        rootNode.addChild("join").denyTabCompletion()
+            .description("Start or join a match")
+            .playerCaller(this::joinMatch);
         rebuildHighscores();
     }
 
@@ -160,5 +169,30 @@ public final class TetrisCommand extends AbstractCommand<TetrisPlugin> {
         public String name() {
             return PlayerCache.nameForUuid(row.getPlayer());
         }
+    }
+
+    private void joinMatch(Player player) {
+        if (plugin.gameOf(player) != null) {
+            throw new CommandWarn("You're already playing!");
+        }
+        if (plugin.getTournament() != null) {
+            throw new CommandWarn("There is a tournament underway!");
+        }
+        plugin.getMatch().getJoined().add(player.getUniqueId());
+        if (!plugin.getMatch().isEnabled()) {
+            plugin.getMatch().enable();
+            for (Player other : Bukkit.getOnlinePlayers()) {
+                if (plugin.gameOf(other) != null) continue;
+                if (player.equals(other)) continue;
+                other.sendMessage(textOfChildren(newline(),
+                                                 text(player.getName() + " started a match. "),
+                                                 Mytems.MOUSE_LEFT,
+                                                 text("Click here to join", GREEN, BOLD),
+                                                 newline())
+                                  .hoverEvent(showText(text("/tetris join", GREEN)))
+                                  .clickEvent(runCommand("/tetris join")));
+            }
+        }
+        player.sendMessage(text("You joined the match", GREEN));
     }
 }

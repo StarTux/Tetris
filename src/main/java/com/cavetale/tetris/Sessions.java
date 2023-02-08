@@ -2,6 +2,7 @@ package com.cavetale.tetris;
 
 import com.cavetale.core.event.hud.PlayerHudEvent;
 import com.cavetale.core.event.hud.PlayerHudPriority;
+import com.cavetale.mytems.Mytems;
 import com.cavetale.mytems.util.Items;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -23,6 +25,11 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.spigotmc.event.player.PlayerSpawnLocationEvent;
+import static net.kyori.adventure.text.Component.newline;
+import static net.kyori.adventure.text.Component.text;
+import static net.kyori.adventure.text.Component.textOfChildren;
+import static net.kyori.adventure.text.event.ClickEvent.runCommand;
+import static net.kyori.adventure.text.event.HoverEvent.showText;
 import static net.kyori.adventure.text.format.NamedTextColor.*;
 import static net.kyori.adventure.text.format.TextDecoration.*;
 
@@ -57,8 +64,21 @@ public final class Sessions implements Listener {
 
     @EventHandler
     private void onPlayerJoin(PlayerJoinEvent event) {
-        Player p = event.getPlayer();
-        of(p).enable(p);
+        Player player = event.getPlayer();
+        of(player).enable(player);
+        if (plugin.getTournament() == null && plugin.getMatch().isEnabled()) {
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                    if (!player.isOnline()) return;
+                    if (!plugin.getMatch().isEnabled()) return;
+                    player.sendMessage(textOfChildren(newline(),
+                                                      text("A match is about to start. ", GREEN, BOLD),
+                                                      Mytems.MOUSE_LEFT,
+                                                      text("Click here to join", GREEN, BOLD),
+                                                      newline())
+                                       .hoverEvent(showText(text("/tetris join", GREEN)))
+                                       .clickEvent(runCommand("/tetris join")));
+                }, 20L);
+        }
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
@@ -95,6 +115,16 @@ public final class Sessions implements Listener {
         }
         if (l != null && !l.isEmpty()) {
             event.sidebar(PlayerHudPriority.HIGHEST, l);
+        }
+        if (game == null && plugin.getTournament() == null && plugin.getMatch().isEnabled()) {
+            event.bossbar(PlayerHudPriority.DEFAULT,
+                          textOfChildren(text("Type "),
+                                         text("/tetris join", GREEN),
+                                         text(" to join the match: "),
+                                         text(plugin.getMatch().getJoined().size(), GREEN)),
+                          BossBar.Color.GREEN,
+                          BossBar.Overlay.PROGRESS,
+                          plugin.getMatch().getProgress());
         }
     }
 
