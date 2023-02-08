@@ -42,9 +42,10 @@ public final class TetrisCommand extends AbstractCommand<TetrisPlugin> {
 
     @Override
     protected void onEnable() {
-        rootNode.addChild("start").denyTabCompletion()
-            .description("Start a game")
-            .playerCaller(this::start);
+        rootNode.addChild("join").denyTabCompletion()
+            .alias("start")
+            .description("Start or join a match")
+            .playerCaller(this::joinMatch);
         rootNode.addChild("stop").denyTabCompletion()
             .description("Stop your game")
             .playerCaller(this::stop);
@@ -54,9 +55,9 @@ public final class TetrisCommand extends AbstractCommand<TetrisPlugin> {
         rootNode.addChild("rank").denyTabCompletion()
             .description("Player rankings")
             .senderCaller(this::rank);
-        rootNode.addChild("join").denyTabCompletion()
-            .description("Start or join a match")
-            .playerCaller(this::joinMatch);
+        rootNode.addChild("singleplayer").denyTabCompletion()
+            .description("Start a singleplayer game")
+            .playerCaller(this::singleplayer);
         rebuildHighscores();
     }
 
@@ -94,7 +95,7 @@ public final class TetrisCommand extends AbstractCommand<TetrisPlugin> {
                 });
     }
 
-    private void start(Player player) {
+    private void singleplayer(Player player) {
         TetrisPlayer session = plugin.sessions.of(player);
         if (session.getGame() != null) {
             throw new CommandWarn("You're already playing!");
