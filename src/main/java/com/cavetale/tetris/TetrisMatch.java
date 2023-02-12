@@ -22,11 +22,13 @@ public final class TetrisMatch {
 
     public void enable() {
         enabled = true;
+        ticks = 0;
     }
 
     public void disable() {
         enabled = false;
         joined.clear();
+        ticks = 0;
     }
 
     protected void tick() {
