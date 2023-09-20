@@ -304,6 +304,28 @@ public final class TetrisGame {
             battle.disable();
             disable();
             Korobeniki.play(getPlayer().getPlayer());
+            // Scores
+            battle.getGames().sort((b, a) -> Integer.compare(a.score, b.score));
+            List<Component> messageLines = new ArrayList<>();
+            messageLines.add(empty());
+            int rank = 0;
+            for (TetrisGame game : battle.getGames()) {
+                rank += 1;
+                messageLines.add(textOfChildren(text(rank + " ", GOLD),
+                                                text(game.player.getName(), WHITE),
+                                                text(tiny(" score"), GRAY),
+                                                text(game.score, WHITE),
+                                                text(tiny(" lines"), GRAY),
+                                                text(game.lines, WHITE),
+                                                text(tiny(" lvl"), GRAY),
+                                                text(game.level, BLUE)));
+            }
+            messageLines.add(empty());
+            Component msg = join(separator(newline()), messageLines);
+            for (TetrisGame game : battle.getGames()) {
+                Player target = game.player.getPlayer();
+                if (target != null) target.sendMessage(msg);
+            }
             return;
         }
         GameState newState;
