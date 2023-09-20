@@ -2,7 +2,7 @@ main: com.cavetale.tetris.TetrisPlugin
 name: Tetris
 
 version: 0.1
-api-version: 1.19
+api-version: '1.20'
 
 description: Tetris Minigame
 author: StarTux
