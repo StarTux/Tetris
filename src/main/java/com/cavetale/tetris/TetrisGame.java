@@ -301,8 +301,6 @@ public final class TetrisGame {
             player.getPlayer().showTitle(title(text("VICTOR", GREEN, BOLD),
                                                text(tiny("final score ") + score, GRAY)));
             TetrisPlugin.instance.onVictory(this, battle);
-            battle.disable();
-            disable();
             Korobeniki.play(getPlayer().getPlayer());
             // Scores
             battle.getGames().sort((b, a) -> Integer.compare(a.score, b.score));
@@ -326,6 +324,8 @@ public final class TetrisGame {
                 Player target = game.player.getPlayer();
                 if (target != null) target.sendMessage(msg);
             }
+            battle.disable();
+            disable();
             return;
         }
         GameState newState;
