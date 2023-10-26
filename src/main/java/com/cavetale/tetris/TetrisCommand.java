@@ -23,7 +23,6 @@ import static net.kyori.adventure.text.Component.newline;
 import static net.kyori.adventure.text.Component.space;
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.Component.textOfChildren;
-import static net.kyori.adventure.text.JoinConfiguration.noSeparators;
 import static net.kyori.adventure.text.JoinConfiguration.separator;
 import static net.kyori.adventure.text.event.ClickEvent.runCommand;
 import static net.kyori.adventure.text.event.HoverEvent.showText;
@@ -139,9 +138,8 @@ public final class TetrisCommand extends AbstractCommand<TetrisPlugin> {
         if (sender instanceof Player player) {
             Highscore playerRank = playerRanks.get(player.getUniqueId());
             if (playerRank != null) {
-                player.sendMessage(join(noSeparators(),
-                                        text("Personal best: ", GRAY),
-                                        rankComponent(playerRank)));
+                player.sendMessage(textOfChildren(text("Personal best: ", GRAY),
+                                                  rankComponent(playerRank)));
             }
         }
         for (Highscore hi : ranks) {
@@ -152,12 +150,11 @@ public final class TetrisCommand extends AbstractCommand<TetrisPlugin> {
     private static Component rankComponent(Highscore hi) {
         return join(separator(space()),
                     Glyph.toComponent("" + hi.placement),
-                    join(noSeparators(),
-                         text(Unicode.tiny("score"), GRAY),
-                         text("" + hi.row.getScore(), GOLD)),
-                    join(noSeparators(),
-                         text(Unicode.tiny("lvl"), GRAY),
-                         text("" + hi.row.getLevel(), GOLD)),
+                    text("" + hi.row.getScore(), GOLD),
+                    textOfChildren(text(Unicode.tiny("lvl"), GRAY),
+                                   text("" + hi.row.getLevel(), GOLD)),
+                    textOfChildren(text(Unicode.tiny("ln"), GRAY),
+                                   text("" + hi.row.getLines(), BLUE)),
                     text(hi.name(), WHITE),
                     text(DATE_FORMAT.format(hi.row.getTime()), GRAY, ITALIC));
     }
