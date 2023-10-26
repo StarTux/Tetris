@@ -96,7 +96,7 @@ public final class TetrisPlugin extends JavaPlugin {
         } while (block.getY() < allocator.getWorld().getMaxHeight());
         block = block.getRelative(0, 8, 0);
         TetrisPlace place = new TetrisPlace(block, BlockFace.EAST, BlockFace.SOUTH);
-        Vec3i home = Vec3i.of(block).add(5, 10, 20);
+        Vec3i home = Vec3i.of(block).add(5, 7, 20);
         TetrisGame game = new TetrisGame(session, place, home);
         game.setSlice(slice);
         session.setGame(game);

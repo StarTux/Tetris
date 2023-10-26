@@ -1,6 +1,7 @@
 package com.cavetale.tetris;
 
 import java.util.UUID;
+import java.util.function.Consumer;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
@@ -31,6 +32,11 @@ public final class TetrisPlayer {
 
     public Player getPlayer() {
         return Bukkit.getPlayer(uuid);
+    }
+
+    public void applyPlayer(Consumer<Player> callback) {
+        Player player = getPlayer();
+        if (player != null) callback.accept(player);
     }
 
     public boolean is(Player p) {

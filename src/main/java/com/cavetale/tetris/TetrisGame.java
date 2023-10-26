@@ -75,6 +75,7 @@ public final class TetrisGame {
     private final List<Tetromino> tetrominos = new ArrayList<>();
     private int tetrominoIndex;
     private List<GlowItemFrame> itemFrames = new ArrayList<>();
+    private TetrisGame lastBattleScoreFrom;
 
     public void initialize(Player p) {
         board = new TetrisBoard(10, 20);
@@ -384,6 +385,7 @@ public final class TetrisGame {
                         for (TetrisGame other : battle.getGames()) {
                             if (other == this) continue;
                             other.battleScore -= level;
+                            other.lastBattleScoreFrom = this;
                         }
                     }
                     int newLevel = lines / 10;
@@ -462,6 +464,12 @@ public final class TetrisGame {
         if (battleScore < -level) {
             battleScore = Math.max(0, battleScore + level);
             shiftUp();
+            if (lastBattleScoreFrom != null) {
+                player.applyPlayer(p -> p.sendMessage(text(lastBattleScoreFrom.player.getName()
+                                                           + " sent you a line", RED)));
+                lastBattleScoreFrom.player.applyPlayer(p -> p.sendMessage(text("You sent a line to "
+                                                                               + player.getName())));
+            }
         }
         fallingTicks -= 1;
         if (fallingTicks > 0) return null;
