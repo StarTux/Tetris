@@ -294,7 +294,7 @@ public final class TetrisGame {
                     event.addFlags(MinigameFlag.EVENT);
                 }
                 for (TetrisGame game : battle.getGames()) {
-                    if (game.getLevel() < 1) continue;
+                    if (game.getLines() < 4) continue;
                     event.addPlayerUuid(game.player.uuid);
                 }
                 event.addWinnerUuid(this.player.uuid);
@@ -446,11 +446,16 @@ public final class TetrisGame {
 
     private void resetFallingTicks() {
         if (battle != null) {
+            final boolean isTournament = TetrisPlugin.getInstance().getTournament() != null;
             int maxLevel = 0;
             for (TetrisGame other : battle.getGames()) {
-                maxLevel = Math.max(maxLevel, other.getLevel());
+                maxLevel = isTournament
+                    ? Math.max(maxLevel, other.getLevel())
+                    : Math.min(maxLevel, other.getLevel());
             }
-            fallingTicks = 10 - maxLevel;
+            fallingTicks = isTournament
+                ? 10 - maxLevel
+                : 12 - maxLevel;
         } else {
             fallingTicks = 20 - (level % 20);
         }
