@@ -446,7 +446,11 @@ public final class TetrisGame {
 
     private void resetFallingTicks() {
         if (battle != null) {
-            fallingTicks = 10 - level;
+            int maxLevel = 0;
+            for (TetrisGame other : battle.getGames()) {
+                maxLevel = Math.max(maxLevel, other.getLevel());
+            }
+            fallingTicks = 10 - maxLevel;
         } else {
             fallingTicks = 20 - (level % 20);
         }
