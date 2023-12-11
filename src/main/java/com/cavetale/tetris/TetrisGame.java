@@ -359,7 +359,7 @@ public final class TetrisGame {
                                                     text("GAME OVER", RED),
                                                     text(tiny("Final score"), GRAY),
                                                     text(score, GOLD)));
-                if (score > 0) {
+                if (score > 0 && battle == null) {
                     TetrisPlugin.instance.database.insertAsync(new SQLScore(this), null);
                     TetrisPlugin.instance.getTetrisCommand().rebuildHighscores();
                 }
