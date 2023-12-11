@@ -447,15 +447,16 @@ public final class TetrisGame {
     private void resetFallingTicks() {
         if (battle != null) {
             final boolean isTournament = TetrisPlugin.getInstance().getTournament() != null;
-            int maxLevel = 0;
+            int useLevel = level;
             for (TetrisGame other : battle.getGames()) {
-                maxLevel = isTournament
-                    ? Math.max(maxLevel, other.getLevel())
-                    : Math.min(maxLevel, other.getLevel());
+                if (!other.state.isDuringGame()) continue;
+                useLevel = isTournament
+                    ? Math.max(useLevel, other.getLevel())
+                    : Math.min(useLevel, other.getLevel());
             }
             fallingTicks = isTournament
-                ? 10 - maxLevel
-                : 12 - maxLevel;
+                ? 10 - useLevel
+                : 12 - useLevel;
         } else {
             fallingTicks = 20 - (level % 20);
         }
