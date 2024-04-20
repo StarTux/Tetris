@@ -303,7 +303,6 @@ public final class TetrisGame {
             } while (false);
             player.getPlayer().showTitle(title(text("VICTOR", GREEN, BOLD),
                                                text(tiny("final score ") + score, GRAY)));
-            TetrisPlugin.instance.onVictory(this, battle);
             Korobeniki.play(getPlayer().getPlayer());
             // Scores
             battle.getGames().sort((b, a) -> Integer.compare(a.score, b.score));
@@ -331,6 +330,7 @@ public final class TetrisGame {
                     plugin.getTournament().addScore(game.player.uuid, game.score);
                 }
             }
+            TetrisPlugin.instance.onVictory(this, battle);
             messageLines.add(empty());
             Component msg = join(separator(newline()), messageLines);
             for (TetrisGame game : battle.getGames()) {
