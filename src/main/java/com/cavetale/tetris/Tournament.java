@@ -85,6 +85,34 @@ public final class Tournament {
         return tag.ranks.getOrDefault(player.getUniqueId(), 0);
     }
 
+    public void addLines(UUID uuid, int lines) {
+        final int value = tag.lines.getOrDefault(uuid, 0);
+        final int newValue = Math.max(0, value + lines);
+        tag.lines.put(uuid, newValue);
+    }
+
+    public int getLines(TetrisPlayer player) {
+        return tag.lines.getOrDefault(player.uuid, 0);
+    }
+
+    public int getLines(Player player) {
+        return tag.lines.getOrDefault(player.getUniqueId(), 0);
+    }
+
+    public void addScore(UUID uuid, int score) {
+        int value = tag.scores.getOrDefault(uuid, 0);
+        int newValue = Math.max(0, value + score);
+        tag.scores.put(uuid, newValue);
+    }
+
+    public int getScore(TetrisPlayer player) {
+        return tag.scores.getOrDefault(player.uuid, 0);
+    }
+
+    public int getScore(Player player) {
+        return tag.scores.getOrDefault(player.getUniqueId(), 0);
+    }
+
     public Highscore getHighscore(UUID uuid) {
         for (Highscore it : highscore) {
             if (uuid.equals(it.uuid)) return it;
@@ -212,6 +240,8 @@ public final class Tournament {
     @Data
     public static final class Tag {
         protected Map<UUID, Integer> ranks = new HashMap<>();
+        protected Map<UUID, Integer> lines = new HashMap<>();
+        protected Map<UUID, Integer> scores = new HashMap<>();
     }
 
     public void setAuto(boolean value) {
