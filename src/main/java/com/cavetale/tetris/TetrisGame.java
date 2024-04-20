@@ -295,7 +295,7 @@ public final class TetrisGame {
                     event.addFlags(MinigameFlag.EVENT);
                 }
                 for (TetrisGame game : battle.getGames()) {
-                    if (game.getLevel() < 1) continue;
+                    if (game.getLines() < 4) continue;
                     event.addPlayerUuid(game.player.uuid);
                 }
                 event.addWinnerUuid(this.player.uuid);
@@ -368,7 +368,7 @@ public final class TetrisGame {
                                                     text("GAME OVER", RED),
                                                     text(tiny("Final score"), GRAY),
                                                     text(score, GOLD)));
-                if (score > 0) {
+                if (score > 0 && battle == null) {
                     TetrisPlugin.instance.database.insertAsync(new SQLScore(this), null);
                     TetrisPlugin.instance.getTetrisCommand().rebuildHighscores();
                 }
@@ -455,11 +455,17 @@ public final class TetrisGame {
 
     private void resetFallingTicks() {
         if (battle != null) {
-            int maxLevel = 0;
+            final boolean isTournament = TetrisPlugin.getInstance().getTournament() != null;
+            int useLevel = level;
             for (TetrisGame other : battle.getGames()) {
-                maxLevel = Math.max(maxLevel, other.getLevel());
+                if (!other.state.isDuringGame()) continue;
+                useLevel = isTournament
+                    ? Math.max(useLevel, other.getLevel())
+                    : Math.min(useLevel, other.getLevel());
             }
-            fallingTicks = 10 - maxLevel;
+            fallingTicks = isTournament
+                ? 10 - useLevel
+                : 12 - useLevel;
         } else {
             fallingTicks = 20 - (level % 20);
         }
