@@ -5,12 +5,12 @@ import com.cavetale.core.event.hud.PlayerHudPriority;
 import com.cavetale.core.event.minigame.MinigameFlag;
 import com.cavetale.core.event.minigame.MinigameMatchCompleteEvent;
 import com.cavetale.core.event.minigame.MinigameMatchType;
+import com.cavetale.core.money.Money;
 import com.cavetale.core.struct.Vec3i;
 import com.cavetale.mytems.Mytems;
 import com.cavetale.mytems.item.font.Glyph;
 import com.cavetale.mytems.session.Session;
 import com.cavetale.mytems.util.BlockColor;
-import com.cavetale.mytems.util.Items;
 import com.cavetale.tetris.sql.SQLScore;
 import com.cavetale.worldmarker.entity.EntityMarker;
 import java.time.Duration;
@@ -37,6 +37,7 @@ import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 import static com.cavetale.core.font.Unicode.tiny;
 import static com.cavetale.mytems.MytemsPlugin.sessionOf;
+import static com.cavetale.mytems.util.Items.tooltip;
 import static net.kyori.adventure.text.Component.empty;
 import static net.kyori.adventure.text.Component.join;
 import static net.kyori.adventure.text.Component.keybind;
@@ -312,6 +313,9 @@ public final class TetrisGame {
             for (TetrisGame game : battle.getGames()) {
                 rank += 1;
                 messageLines.add(textOfChildren(text(rank + " ", GOLD),
+                                                (game == this
+                                                 ? Mytems.WHITE_QUEEN
+                                                 : empty()),
                                                 text(game.player.getName(), WHITE),
                                                 text(tiny(" score"), GRAY),
                                                 text(game.score, WHITE),
@@ -319,6 +323,11 @@ public final class TetrisGame {
                                                 text(game.lines, WHITE),
                                                 text(tiny(" lvl"), GRAY),
                                                 text(game.level, BLUE)));
+                final var plugin = TetrisPlugin.getInstance();
+                if (plugin.getTournament() != null) {
+                    // Server event
+                    Money.get().give(game.player.uuid, game.lines * 50, plugin, "Tetris Tournament");
+                }
             }
             messageLines.add(empty());
             Component msg = join(separator(newline()), messageLines);
@@ -711,8 +720,8 @@ public final class TetrisGame {
             if (hotbar == null || hotbar.mytems == null) {
                 p.getInventory().setItem(i, null);
             } else {
-                p.getInventory().setItem(i, Items.text(hotbar.mytems.createIcon(),
-                                                       List.of(hotbar.text)));
+                p.getInventory().setItem(i, tooltip(hotbar.mytems.createIcon(),
+                                                    List.of(hotbar.text)));
             }
         }
         p.getInventory().setHeldItemSlot(Hotbar.NEUTRAL.slot);

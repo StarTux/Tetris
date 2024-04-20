@@ -3,7 +3,6 @@ package com.cavetale.tetris;
 import com.cavetale.core.event.hud.PlayerHudEvent;
 import com.cavetale.core.event.hud.PlayerHudPriority;
 import com.cavetale.mytems.Mytems;
-import com.cavetale.mytems.util.Items;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,6 +24,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.spigotmc.event.player.PlayerSpawnLocationEvent;
+import static com.cavetale.mytems.util.Items.tooltip;
 import static net.kyori.adventure.text.Component.newline;
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.Component.textOfChildren;
@@ -158,8 +158,8 @@ public final class Sessions implements Listener {
         Bukkit.getScheduler().runTask(plugin, () -> {
                 game.playerInputSwap(player);
                 player.getInventory().setItemInOffHand(null);
-                player.getInventory().setItem(Hotbar.NEUTRAL.slot, Items.text(Hotbar.NEUTRAL.mytems.createIcon(),
-                                                                              List.of(Hotbar.NEUTRAL.text)));
+                player.getInventory().setItem(Hotbar.NEUTRAL.slot, tooltip(Hotbar.NEUTRAL.mytems.createIcon(),
+                                                                           List.of(Hotbar.NEUTRAL.text)));
             });
     }
 

@@ -160,7 +160,7 @@ public final class TetrisCommand extends AbstractCommand<TetrisPlugin> {
     }
 
     @RequiredArgsConstructor
-    private static class Highscore {
+    private static final class Highscore {
         protected final int placement;
         protected final SQLScore row;
 
