@@ -121,12 +121,12 @@ public final class Tournament {
     }
 
     public void computeHighscore() {
-        this.highscore = Highscore.of(tag.ranks);
+        this.highscore = Highscore.of(tag.scores);
         this.highscoreLines = Highscore.sidebar(highscore, TrophyCategory.TETRIS);
     }
 
     public int reward() {
-        int result = Highscore.reward(tag.ranks,
+        int result = Highscore.reward(tag.scores,
                                       "tetris_tournament",
                                       TrophyCategory.TETRIS,
                                       join(noSeparators(), plugin.tetrisTitle, text(" Tournament", GREEN)),
@@ -139,7 +139,7 @@ public final class Tournament {
                                       "TetrisJ",
                                       "TetrisZ",
                                       "TetrisI");
-        List<Highscore> list = Highscore.of(tag.ranks);
+        List<Highscore> list = Highscore.of(tag.scores);
         for (int i = 0; i < list.size() && i < 3; i += 1) {
             String winnerName = PlayerCache.nameForUuid(list.get(i).uuid);
             String cmd = "titles unlockset " + winnerName + " " + String.join(" ", titles);
