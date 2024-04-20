@@ -81,6 +81,10 @@ public final class Tournament {
         return tag.ranks.getOrDefault(player.uuid, 0);
     }
 
+    public int getRank(Player player) {
+        return tag.ranks.getOrDefault(player.getUniqueId(), 0);
+    }
+
     public Highscore getHighscore(UUID uuid) {
         for (Highscore it : highscore) {
             if (uuid.equals(it.uuid)) return it;
@@ -164,11 +168,21 @@ public final class Tournament {
             int rank = tag.ranks.getOrDefault(player.getUniqueId(), 0);
             map.computeIfAbsent(rank, i -> new ArrayList<>()).add(player);
         }
-        List<Integer> rankList = new ArrayList<>(List.copyOf(map.keySet()));
-        Collections.sort(rankList);
-        if (rankList.size() >= 2 && map.get(rankList.get(0)) != null && map.get(rankList.get(0)).size() == 1 && map.get(rankList.get(1)) != null) {
-            map.get(rankList.get(1)).addAll(map.remove(rankList.get(0)));
-        }
+        do {
+            // Prevent new players from staying stuck without an opponent
+            List<Integer> rankList = new ArrayList<>(List.copyOf(map.keySet()));
+            Collections.sort(rankList);
+            int highest = 0;
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                final int rank = getRank(p);
+                if (rank > highest) {
+                    highest = rank;
+                }
+            }
+            if (rankList.size() >= 2 && rankList.get(0) == 0 && map.get(0) != null && map.get(0).size() == 1 && rankList.get(1) != highest && map.get(rankList.get(1)) != null) {
+                map.get(rankList.get(1)).addAll(map.remove(rankList.get(0)));
+            }
+        } while (false);
         for (Map.Entry<Integer, List<Player>> entry : map.entrySet()) {
             int rank = entry.getKey();
             List<Player> list = entry.getValue();
