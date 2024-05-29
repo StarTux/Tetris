@@ -295,7 +295,7 @@ public final class TetrisGame {
                     event.addFlags(MinigameFlag.EVENT);
                 }
                 for (TetrisGame game : battle.getGames()) {
-                    if (game.getLines() < 4) continue;
+                    if (game.getLines() < 1) continue;
                     event.addPlayerUuid(game.player.uuid);
                 }
                 event.addWinnerUuid(this.player.uuid);
