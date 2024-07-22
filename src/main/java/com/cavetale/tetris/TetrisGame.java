@@ -328,6 +328,7 @@ public final class TetrisGame {
                     Money.get().give(game.player.uuid, game.lines * 50, plugin, "Tetris Tournament");
                     plugin.getTournament().addLines(game.player.uuid, game.lines);
                     plugin.getTournament().addScore(game.player.uuid, game.score);
+                    plugin.getTournament().computeHighscore();
                 }
             }
             TetrisPlugin.instance.onVictory(this, battle);
