@@ -1,8 +1,8 @@
 package com.cavetale.tetris;
 
 import lombok.Getter;
-import lombok.Setter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
 /**
  * A slice of the world for the Allocator.

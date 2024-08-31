@@ -1,8 +1,8 @@
 package com.cavetale.tetris;
 
+import com.cavetale.mytems.util.BlockColor;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
-import com.cavetale.mytems.util.BlockColor;
 
 public final class Rnd {
     private Rnd() { }
