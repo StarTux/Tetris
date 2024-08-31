@@ -1,6 +1,5 @@
 package com.cavetale.tetris;
 
-import com.cavetale.core.font.Unicode;
 import com.cavetale.core.playercache.PlayerCache;
 import com.cavetale.core.util.Json;
 import com.cavetale.fam.trophy.Highscore;
@@ -21,25 +20,27 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
-import static net.kyori.adventure.text.Component.join;
+import static com.cavetale.core.font.Unicode.subscript;
+import static com.cavetale.core.font.Unicode.tiny;
 import static net.kyori.adventure.text.Component.text;
-import static net.kyori.adventure.text.JoinConfiguration.noSeparators;
+import static net.kyori.adventure.text.Component.textOfChildren;
 import static net.kyori.adventure.text.format.NamedTextColor.*;
 import static net.kyori.adventure.text.format.TextDecoration.*;
 
 @RequiredArgsConstructor
 public final class Tournament {
+    private static final int MIN_WAIT_TIME = 20;
+
     private final TetrisPlugin plugin;
     @Getter private Tag tag;
     private BukkitTask task;
     @Getter private boolean auto = false;
-    private int autoCooldown = 0;
     private List<Highscore> highscore = List.of();
     private List<Component> highscoreLines = List.of();
 
     public void enable() {
         load();
-        task = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 20L, 20L);
+        task = Bukkit.getScheduler().runTaskTimer(plugin, this::tickOncePerSecond, 20L, 20L);
     }
 
     public void disable() {
@@ -67,6 +68,7 @@ public final class Tournament {
 
     public void onVictory(TetrisGame winner, TetrisBattle battle) {
         addRank(winner.getPlayer().getUuid(), 1);
+        addScore(winner.getPlayer().getUuid(), Math.min(10_000, winner.getScore()));
         save();
         computeHighscore();
     }
@@ -129,7 +131,7 @@ public final class Tournament {
         int result = Highscore.reward(tag.scores,
                                       "tetris_tournament",
                                       TrophyCategory.TETRIS,
-                                      join(noSeparators(), plugin.tetrisTitle, text(" Tournament", GREEN)),
+                                      textOfChildren(plugin.tetrisTitle, text(" Tournament", GREEN)),
                                       hi -> "You earned " + hi.score + " point" + (hi.score != 1 ? "s" : ""));
         List<String> titles = List.of("Tetromino",
                                       "TetrisO",
@@ -151,33 +153,42 @@ public final class Tournament {
     }
 
     public void getSidebarLines(TetrisPlayer p, List<Component> l) {
-        l.add(text(Unicode.tiny("tournament"), GOLD));
-        if (p.getGame() == null) {
+        l.add(text(tiny("tournament"), GOLD));
+        if (auto && p.getGame() == null) {
+            final int waitTime = tag.waitTimes.getOrDefault(p.getPlayer().getUniqueId(), 0);
+            final int scoreTolerance = calculateScoreTolerance(waitTime);
             l.add(text("Please wait until a", WHITE, ITALIC));
             l.add(text("game becomes available", WHITE, ITALIC));
+            l.add(textOfChildren(text(tiny("waiting for "), GRAY),
+                                 text(waitTime),
+                                 text(tiny("s"), GRAY)));
+            l.add(textOfChildren(text(tiny("players within "), GRAY),
+                                 text(scoreTolerance),
+                                 text(tiny("p"), GRAY)));
         }
         Highscore playerRank = getHighscore(p.uuid);
-        l.add(join(noSeparators(), text("Your score ", GRAY),
-                   (playerRank.getPlacement() > 0
-                    ? Glyph.toComponent("" + playerRank.getPlacement())
-                    : Mytems.QUESTION_MARK),
-                   text(Unicode.subscript("" + playerRank.score), GOLD)));
+        l.add(textOfChildren(text("Your score ", GRAY),
+                             (playerRank.getPlacement() > 0
+                              ? Glyph.toComponent("" + playerRank.getPlacement())
+                              : Mytems.QUESTION_MARK),
+                             text(subscript("" + playerRank.score), GOLD)));
         l.addAll(highscoreLines);
     }
 
-    private void tick() {
-        if (auto) auto();
-    }
-
-    private void auto() {
+    private void tickOncePerSecond() {
+        if (!auto) return;
         List<Player> players = getWaitingPlayers();
         if (players.size() < 2) {
-            autoCooldown = 60;
-        } else if (autoCooldown > 0) {
-            autoCooldown -= 1;
-        } else {
-            tryToBuildBattles(players);
-            autoCooldown = 60;
+            tag.waitTimes.clear();
+            return;
+        }
+        for (Player player : players) {
+            final UUID uuid = player.getUniqueId();
+            tag.waitTimes.put(uuid, tag.waitTimes.getOrDefault(uuid, 0) + 1);
+        }
+        players.removeIf(p -> tag.waitTimes.getOrDefault(p.getUniqueId(), 0) < MIN_WAIT_TIME);
+        while (players.size() >= 2) {
+            if (0 == tryToBuildBattles(players)) break;
         }
     }
 
@@ -190,51 +201,61 @@ public final class Tournament {
         return result;
     }
 
-    private void tryToBuildBattles(List<Player> players) {
-        Map<Integer, List<Player>> map = new HashMap<>();
-        for (Player player : players) {
-            int rank = tag.ranks.getOrDefault(player.getUniqueId(), 0);
-            map.computeIfAbsent(rank, i -> new ArrayList<>()).add(player);
+    /**
+     * Try to build a battle from the list of available players and
+     * remove them from the list.
+     * @return the number of battles built
+     */
+    private int tryToBuildBattles(List<Player> players) {
+        Collections.shuffle(players, Rnd.get());
+        int result = 0;
+        for (Player player : List.copyOf(players)) {
+            if (players.size() < 2) break;
+            if (!players.contains(player)) continue;
+            final int playerScore = tag.scores.getOrDefault(player.getUniqueId(), 0);
+            final int waitTime = tag.waitTimes.getOrDefault(player.getUniqueId(), 0);
+            final int scoreTolerance = calculateScoreTolerance(waitTime);
+            final List<Player> matchList = new ArrayList<>();
+            matchList.add(player);
+            for (Player opponent : players) {
+                if (opponent == player) continue;
+                final int opponentScore = tag.scores.getOrDefault(opponent.getUniqueId(), 0);
+                if (Math.abs(opponentScore - playerScore) > scoreTolerance) continue;
+                matchList.add(opponent);
+                if (matchList.size() >= 3 && players.size() > 4) break;
+            }
+            if (matchList.size() < 2) continue;
+            players.removeAll(matchList);
+            buildBattle(playerScore, scoreTolerance, waitTime, matchList);
+            result += 1;
         }
-        do {
-            // Prevent new players from staying stuck without an opponent
-            List<Integer> rankList = new ArrayList<>(List.copyOf(map.keySet()));
-            Collections.sort(rankList);
-            int highest = 0;
-            for (Player p : Bukkit.getOnlinePlayers()) {
-                final int rank = getRank(p);
-                if (rank > highest) {
-                    highest = rank;
-                }
-            }
-            if (rankList.size() >= 2 && rankList.get(0) == 0 && map.get(0) != null && map.get(0).size() == 1 && rankList.get(1) != highest && map.get(rankList.get(1)) != null) {
-                map.get(rankList.get(1)).addAll(map.remove(rankList.get(0)));
-            }
-        } while (false);
-        for (Map.Entry<Integer, List<Player>> entry : map.entrySet()) {
-            int rank = entry.getKey();
-            List<Player> list = entry.getValue();
-            if (list.size() < 2) continue;
-            Collections.shuffle(list, Rnd.get());
-            while (list.size() >= 2) {
-                TetrisBattle battle = new TetrisBattle();
-                List<String> names = new ArrayList<>();
-                int max = list.size() == 3 ? 3 : 2;
-                for (int i = 0; i < max; i += 1) {
-                    Player player = list.remove(list.size() - 1);
-                    TetrisGame game = plugin.startGame(player);
-                    battle.getGames().add(game);
-                    game.setBattle(battle);
-                    names.add(player.getName());
-                    if (list.isEmpty()) break;
-                }
-                for (TetrisGame game : battle.getGames()) {
-                    game.getPlayer().getPlayer().sendMessage(text("Starting game with " + String.join(", ", names), GREEN));
-                }
-                plugin.getLogger().info("[Tournament] Starting battle (" + rank + ")" + String.join(", ", names));
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "ml add " + String.join(" ", names));
-            }
+        return result;
+    }
+
+    private static int calculateScoreTolerance(int waitTime) {
+        return Math.max(0, (waitTime - MIN_WAIT_TIME) * 200); // 200 points per second good?
+    }
+
+    private void buildBattle(int playerScore, int scoreTolerance, int waitTime, List<Player> matchList) {
+        TetrisBattle battle = new TetrisBattle();
+        List<String> names = new ArrayList<>();
+        for (Player player : matchList) {
+            TetrisGame game = plugin.startGame(player);
+            battle.getGames().add(game);
+            game.setBattle(battle);
+            names.add(player.getName());
+            tag.waitTimes.remove(player.getUniqueId());
         }
+        for (TetrisGame game : battle.getGames()) {
+            game.getPlayer().getPlayer().sendMessage(text("Starting game with " + String.join(", ", names), GREEN));
+            game.getPlayer().getPlayer().sendMessage(text("Good luck and have fun!", GREEN));
+        }
+        plugin.getLogger().info("[Tournament] Starting battle"
+                                + " score:" + playerScore
+                                + " tolerance:" + scoreTolerance
+                                + " wait:" + waitTime
+                                + " [ " + String.join(", ", names) + " ]");
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "ml add " + String.join(" ", names));
     }
 
     @Data
@@ -242,10 +263,10 @@ public final class Tournament {
         protected Map<UUID, Integer> ranks = new HashMap<>();
         protected Map<UUID, Integer> lines = new HashMap<>();
         protected Map<UUID, Integer> scores = new HashMap<>();
+        protected Map<UUID, Integer> waitTimes = new HashMap<>();
     }
 
     public void setAuto(boolean value) {
         this.auto = value;
-        this.autoCooldown = 0;
     }
 }

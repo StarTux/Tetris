@@ -137,6 +137,7 @@ public final class AdminCommand extends AbstractCommand<TetrisPlugin> {
         plugin.getTournament().getTag().getRanks().clear();
         plugin.getTournament().getTag().getLines().clear();
         plugin.getTournament().getTag().getScores().clear();
+        plugin.getTournament().getTag().getWaitTimes().clear();
         plugin.getTournament().save();
         plugin.getTournament().computeHighscore();
         sender.sendMessage(text("Ranks cleared!", AQUA));
