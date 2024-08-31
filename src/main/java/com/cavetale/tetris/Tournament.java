@@ -234,7 +234,7 @@ public final class Tournament {
     }
 
     private static int calculateScoreTolerance(int waitTime) {
-        return Math.max(0, (waitTime - MIN_WAIT_TIME) * 200); // 200 points per second good?
+        return Math.max(0, (waitTime - MIN_WAIT_TIME) * 400); // 400 points per second good?
     }
 
     private void buildBattle(int playerScore, int scoreTolerance, int waitTime, List<Player> matchList) {
