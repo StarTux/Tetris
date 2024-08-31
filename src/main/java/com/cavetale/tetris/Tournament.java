@@ -220,7 +220,9 @@ public final class Tournament {
             for (Player opponent : players) {
                 if (opponent == player) continue;
                 final int opponentScore = tag.scores.getOrDefault(opponent.getUniqueId(), 0);
-                if (Math.abs(opponentScore - playerScore) > scoreTolerance) continue;
+                final int opponentWaitTime = tag.waitTimes.getOrDefault(opponent.getUniqueId(), 0);
+                final int opponentScoreTolerance = calculateScoreTolerance(opponentWaitTime);
+                if (Math.abs(opponentScore - playerScore) > Math.min(scoreTolerance, opponentScoreTolerance)) continue;
                 matchList.add(opponent);
                 if (matchList.size() >= 3 && players.size() > 4) break;
             }
