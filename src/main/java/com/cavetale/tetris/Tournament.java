@@ -179,7 +179,6 @@ public final class Tournament {
         if (!auto) return;
         List<Player> players = getWaitingPlayers();
         if (players.size() < 2) {
-            tag.waitTimes.clear();
             return;
         }
         for (Player player : players) {
