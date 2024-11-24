@@ -175,7 +175,11 @@ public final class Tournament {
     }
 
     public int reward() {
-        int result = Highscore.reward(tag.scores,
+        final Map<UUID, Integer> elos = new HashMap<>();
+        for (Map.Entry<UUID, Double> entry : tag.elos.entrySet()) {
+            elos.put(entry.getKey(), entry.getValue().intValue());
+        }
+        int result = Highscore.reward(elos,
                                       "tetris_tournament",
                                       TrophyCategory.TETRIS,
                                       textOfChildren(plugin.tetrisTitle, text(" Tournament", GREEN)),
