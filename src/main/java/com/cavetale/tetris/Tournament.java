@@ -232,6 +232,7 @@ public final class Tournament {
             return;
         }
         final List<Player> players = getWaitingPlayers();
+        Collections.shuffle(players);
         Collections.sort(players, Comparator.comparing(this::getElo));
         if (players.size() < 2) {
             return;
