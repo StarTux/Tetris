@@ -696,8 +696,8 @@ public final class TetrisGame {
                 String scoreString = String.format("%" + scoreLength + "d", other.getScore());
                 Player p = other.getPlayer().getPlayer();
                 l.add(join(separator(space()),
-                               text(scoreString, other.isActive() ? WHITE : DARK_GRAY),
-                               (p != null ? p.displayName() : text(other.getPlayer().getName(), WHITE))));
+                           text(scoreString, other.isActive() ? WHITE : DARK_GRAY),
+                           text(other.getPlayer().getName(), WHITE)));
             }
         }
     }
