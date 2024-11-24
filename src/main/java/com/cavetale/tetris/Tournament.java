@@ -192,7 +192,7 @@ public final class Tournament {
                                       "TetrisJ",
                                       "TetrisZ",
                                       "TetrisI");
-        List<Highscore> list = Highscore.of(tag.scores);
+        List<Highscore> list = Highscore.of(elos);
         for (int i = 0; i < list.size() && i < 3; i += 1) {
             String winnerName = PlayerCache.nameForUuid(list.get(i).uuid);
             String cmd = "titles unlockset " + winnerName + " " + String.join(" ", titles);
