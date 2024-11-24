@@ -42,4 +42,8 @@ public final class TetrisPlayer {
     public boolean is(Player p) {
         return uuid.equals(p.getUniqueId());
     }
+
+    public boolean is(UUID u) {
+        return uuid.equals(u);
+    }
 }

@@ -38,6 +38,7 @@ import org.bukkit.util.Vector;
 import static com.cavetale.core.font.Unicode.tiny;
 import static com.cavetale.mytems.MytemsPlugin.sessionOf;
 import static com.cavetale.mytems.util.Items.tooltip;
+import static com.cavetale.tetris.TetrisPlugin.tetrisPlugin;
 import static net.kyori.adventure.text.Component.empty;
 import static net.kyori.adventure.text.Component.join;
 import static net.kyori.adventure.text.Component.keybind;
@@ -143,7 +144,7 @@ public final class TetrisGame {
         }
         if (player.getGame() == this) player.setGame(null);
         clearFrame();
-        TetrisPlugin.instance.games.remove(this);
+        tetrisPlugin().games.remove(this);
         state = GameState.DISABLE;
         Player p = player.getPlayer();
         if (p != null) {
@@ -289,57 +290,7 @@ public final class TetrisGame {
 
     private void tick() {
         if (battle != null && battle.findWinner() == this) {
-            do {
-                MinigameMatchCompleteEvent event = new MinigameMatchCompleteEvent(MinigameMatchType.TETRIS);
-                if (TetrisPlugin.getInstance().getTournament() != null) {
-                    event.addFlags(MinigameFlag.EVENT);
-                }
-                for (TetrisGame game : battle.getGames()) {
-                    if (game.getLines() < 1) continue;
-                    event.addPlayerUuid(game.player.uuid);
-                }
-                event.addWinnerUuid(this.player.uuid);
-                event.callEvent();
-            } while (false);
-            player.getPlayer().showTitle(title(text("VICTOR", GREEN, BOLD),
-                                               text(tiny("final score ") + score, GRAY)));
-            Korobeniki.play(getPlayer().getPlayer());
-            // Scores
-            battle.getGames().sort((b, a) -> Integer.compare(a.score, b.score));
-            List<Component> messageLines = new ArrayList<>();
-            messageLines.add(empty());
-            int rank = 0;
-            for (TetrisGame game : battle.getGames()) {
-                rank += 1;
-                messageLines.add(textOfChildren(text(rank + " ", GOLD),
-                                                (game == this
-                                                 ? Mytems.WHITE_QUEEN
-                                                 : empty()),
-                                                text(game.player.getName(), WHITE),
-                                                text(tiny(" score"), GRAY),
-                                                text(game.score, WHITE),
-                                                text(tiny(" lines"), GRAY),
-                                                text(game.lines, WHITE),
-                                                text(tiny(" lvl"), GRAY),
-                                                text(game.level, BLUE)));
-                final var plugin = TetrisPlugin.getInstance();
-                if (plugin.getTournament() != null) {
-                    // Server event
-                    Money.get().give(game.player.uuid, game.lines * 50, plugin, "Tetris Tournament");
-                    plugin.getTournament().addLines(game.player.uuid, game.lines);
-                    plugin.getTournament().addScore(game.player.uuid, game.score);
-                    plugin.getTournament().computeHighscore();
-                }
-            }
-            TetrisPlugin.instance.onVictory(this, battle);
-            messageLines.add(empty());
-            Component msg = join(separator(newline()), messageLines);
-            for (TetrisGame game : battle.getGames()) {
-                Player target = game.player.getPlayer();
-                if (target != null) target.sendMessage(msg);
-            }
-            battle.disable();
-            disable();
+            battleVictory();
             return;
         }
         GameState newState;
@@ -365,6 +316,7 @@ public final class TetrisGame {
                 });
             if (lost[0]) {
                 state = GameState.LOSE;
+                stateTicks = 0;
                 player.getPlayer().showTitle(title(text("GAME OVER", RED),
                                                    text(tiny("final score ") + score, GRAY)));
                 player.getPlayer().sendMessage(join(separator(space()),
@@ -372,13 +324,13 @@ public final class TetrisGame {
                                                     text(tiny("Final score"), GRAY),
                                                     text(score, GOLD)));
                 if (score > 0 && battle == null) {
-                    TetrisPlugin.instance.database.insertAsync(new SQLScore(this), null);
-                    TetrisPlugin.instance.getTetrisCommand().rebuildHighscores();
+                    tetrisPlugin().database.insertAsync(new SQLScore(this), null);
+                    tetrisPlugin().getTetrisCommand().rebuildHighscores();
                 }
-                if (battle != null) {
-                    TetrisPlugin.instance.onGameOver(this, battle);
+                if (lines == 0 && tetrisPlugin().getTournament() != null) {
+                    tetrisPlugin().getLogger().info("Kicking " + player.getName() + " because they are afk");
+                    player.getPlayer().kick(text("afk"));
                 }
-                stateTicks = 0;
             } else {
                 board.paste(block.getBoard(), block.getX(), block.getY());
                 fullRows = board.getFullRows();
@@ -444,6 +396,63 @@ public final class TetrisGame {
             break;
         default: throw new IllegalStateException("newState=" + newState);
         }
+    }
+
+    private void battleVictory() {
+        do {
+            MinigameMatchCompleteEvent event = new MinigameMatchCompleteEvent(MinigameMatchType.TETRIS);
+            if (TetrisPlugin.getInstance().getTournament() != null) {
+                event.addFlags(MinigameFlag.EVENT);
+            }
+            for (TetrisGame game : battle.getGames()) {
+                if (game.getLines() < 1) continue;
+                event.addPlayerUuid(game.player.uuid);
+            }
+            event.addWinnerUuid(this.player.uuid);
+            event.callEvent();
+        } while (false);
+        player.getPlayer().showTitle(title(text("VICTOR", GREEN, BOLD),
+                                           text(tiny("final score ") + score, GRAY)));
+        Korobeniki.play(getPlayer().getPlayer());
+        // Scores
+        battle.getGames().sort((b, a) -> Integer.compare(a.score, b.score));
+        List<Component> messageLines = new ArrayList<>();
+        messageLines.add(empty());
+        int rank = 0;
+        for (TetrisGame game : battle.getGames()) {
+            rank += 1;
+            messageLines.add(textOfChildren(text(rank + " ", GOLD),
+                                            (game == this
+                                             ? Mytems.WHITE_QUEEN
+                                             : empty()),
+                                            text(game.player.getName(), WHITE),
+                                            text(tiny(" score"), GRAY),
+                                            text(game.score, WHITE),
+                                            text(tiny(" lines"), GRAY),
+                                            text(game.lines, WHITE),
+                                            text(tiny(" lvl"), GRAY),
+                                            text(game.level, BLUE)));
+            if (tetrisPlugin().getTournament() != null) {
+                // Server event
+                if (tetrisPlugin().getTournament().isEvent()) {
+                    Money.get().give(game.player.uuid, game.lines * 50, TetrisPlugin.instance, "Tetris Tournament");
+                }
+                tetrisPlugin().getTournament().addLines(game.player.uuid, game.lines);
+                tetrisPlugin().getTournament().addScore(game.player.uuid, game.score);
+                tetrisPlugin().getTournament().computeHighscore();
+            }
+        }
+        if (tetrisPlugin().getTournament() != null) {
+            tetrisPlugin().getTournament().onVictory(this, battle);
+        }
+        messageLines.add(empty());
+        Component msg = join(separator(newline()), messageLines);
+        for (TetrisGame game : battle.getGames()) {
+            Player target = game.player.getPlayer();
+            if (target != null) target.sendMessage(msg);
+        }
+        battle.disable();
+        disable();
     }
 
     private int scoreBonus(int newLines) {

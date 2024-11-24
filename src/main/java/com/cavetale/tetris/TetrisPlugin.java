@@ -27,7 +27,7 @@ public final class TetrisPlugin extends JavaPlugin {
     protected Sessions sessions = new Sessions(this);
     @Getter @Setter private Tournament tournament = null;
     @Getter protected final Allocator allocator = new Allocator(this);
-    protected List<TetrisGame> games = new ArrayList<>();
+    @Getter protected List<TetrisGame> games = new ArrayList<>();
     @Getter protected TetrisMatch match = new TetrisMatch(this);
     protected SQLDatabase database = new SQLDatabase(this);
     public final Component tetrisTitle = join(noSeparators(), new Component[] {
@@ -61,14 +61,6 @@ public final class TetrisPlugin extends JavaPlugin {
         sessions.disable();
         for (TetrisGame game : new ArrayList<>(games)) game.disable();
         games.clear();
-    }
-
-    public void onVictory(TetrisGame game, TetrisBattle battle) {
-        if (tournament != null) tournament.onVictory(game, battle);
-    }
-
-    public void onGameOver(TetrisGame game, TetrisBattle battle) {
-        if (tournament != null) tournament.onGameOver(game, battle);
     }
 
     public TetrisGame startGame(Player player) {
@@ -115,5 +107,9 @@ public final class TetrisPlugin extends JavaPlugin {
 
     private void tick() {
         if (match.isEnabled()) match.tick();
+    }
+
+    public static TetrisPlugin tetrisPlugin() {
+        return instance;
     }
 }

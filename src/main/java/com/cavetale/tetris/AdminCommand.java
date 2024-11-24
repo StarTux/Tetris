@@ -43,6 +43,9 @@ public final class AdminCommand extends AbstractCommand<TetrisPlugin> {
         tournamentNode.addChild("auto").denyTabCompletion()
             .description("Toggle auto mode")
             .senderCaller(this::tournamentAuto);
+        tournamentNode.addChild("event").denyTabCompletion()
+            .description("Toggle event mode")
+            .senderCaller(this::tournamentEvent);
         tournamentNode.addChild("rank").arguments("<player> <amount>")
             .description("Adjust player rank")
             .completers(CommandArgCompleter.NULL, CommandArgCompleter.integer(i -> i != 0))
@@ -116,6 +119,21 @@ public final class AdminCommand extends AbstractCommand<TetrisPlugin> {
         }
     }
 
+    private void tournamentEvent(CommandSender sender) {
+        Tournament tournament = plugin.getTournament();
+        if (tournament == null) {
+            throw new CommandWarn("Tournament not enabled!");
+        }
+        boolean event = !tournament.isEvent();
+        tournament.setEvent(event);
+        tournament.save();
+        if (event) {
+            sender.sendMessage(text("Event mode enabled", AQUA));
+        } else {
+            sender.sendMessage(text("Event mode disabled", RED));
+        }
+    }
+
     private boolean tournamentRank(CommandSender sender, String[] args) {
         if (args.length != 2) return false;
         if (plugin.getTournament() == null) {
@@ -137,7 +155,7 @@ public final class AdminCommand extends AbstractCommand<TetrisPlugin> {
         plugin.getTournament().getTag().getRanks().clear();
         plugin.getTournament().getTag().getLines().clear();
         plugin.getTournament().getTag().getScores().clear();
-        plugin.getTournament().getTag().getWaitTimes().clear();
+        plugin.getTournament().getTag().getElos().clear();
         plugin.getTournament().save();
         plugin.getTournament().computeHighscore();
         sender.sendMessage(text("Ranks cleared!", AQUA));
