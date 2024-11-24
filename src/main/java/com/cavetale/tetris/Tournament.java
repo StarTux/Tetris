@@ -36,7 +36,7 @@ public final class Tournament {
     private static final double INIT_ELO = 100.0;
 
     private final TetrisPlugin plugin;
-    @Getter private Tag tag;
+    @Getter @Setter private Tag tag;
     private BukkitTask task;
     @Getter @Setter private boolean auto = false;
     @Getter @Setter private boolean event = true;

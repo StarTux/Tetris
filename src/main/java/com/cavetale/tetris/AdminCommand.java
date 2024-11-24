@@ -152,10 +152,7 @@ public final class AdminCommand extends AbstractCommand<TetrisPlugin> {
         if (plugin.getTournament() == null) {
             throw new CommandWarn("Tournament not enabled!");
         }
-        plugin.getTournament().getTag().getRanks().clear();
-        plugin.getTournament().getTag().getLines().clear();
-        plugin.getTournament().getTag().getScores().clear();
-        plugin.getTournament().getTag().getElos().clear();
+        plugin.getTournament().setTag(new Tournament.Tag());
         plugin.getTournament().save();
         plugin.getTournament().computeHighscore();
         sender.sendMessage(text("Ranks cleared!", AQUA));
