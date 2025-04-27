@@ -23,6 +23,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
+import org.bukkit.event.player.PlayerToggleFlightEvent;
 import org.spigotmc.event.player.PlayerSpawnLocationEvent;
 import static com.cavetale.mytems.util.Items.tooltip;
 import static net.kyori.adventure.text.Component.newline;
@@ -171,5 +172,20 @@ public final class Sessions implements Listener {
     @EventHandler
     private void onPlayerRespawn(PlayerRespawnEvent event) {
         event.setRespawnLocation(Bukkit.getWorld("tetris").getSpawnLocation());
+    }
+
+    /**
+     * Make it so player cannot stop flying in the middle of the game.
+     */
+    @EventHandler
+    private void onPlayerToggleFlight(PlayerToggleFlightEvent event) {
+        Player player = event.getPlayer();
+        TetrisPlayer session = of(player);
+        TetrisGame game = session.getGame();
+        if (game == null) return;
+        if (!event.isFlying()) {
+            event.setCancelled(true);
+            game.teleportHome(player);
+        }
     }
 }

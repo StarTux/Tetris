@@ -24,6 +24,7 @@ import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Input;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -78,6 +79,11 @@ public final class TetrisGame {
     private int tetrominoIndex;
     private List<GlowItemFrame> itemFrames = new ArrayList<>();
     private TetrisGame lastBattleScoreFrom;
+    // WASD
+    private boolean wasLeft;
+    private boolean wasRight;
+    private boolean wasUp;
+    private boolean wasDown;
 
     public void initialize(Player p) {
         board = new TetrisBoard(10, 20);
@@ -150,6 +156,7 @@ public final class TetrisGame {
         if (p != null) {
             p.getInventory().clear();
             sessionOf(p).setHidingPlayers(false);
+            p.setFlySpeed(0.1f);
         }
     }
 
@@ -306,6 +313,7 @@ public final class TetrisGame {
         }
         stateTicks += 1;
         if (newState == null) return;
+        final Player p = player.getPlayer();
         switch (newState) {
         case LAND: {
             boolean[] lost = new boolean[1];
@@ -317,12 +325,15 @@ public final class TetrisGame {
             if (lost[0]) {
                 state = GameState.LOSE;
                 stateTicks = 0;
-                player.getPlayer().showTitle(title(text("GAME OVER", RED),
-                                                   text(tiny("final score ") + score, GRAY)));
-                player.getPlayer().sendMessage(join(separator(space()),
-                                                    text("GAME OVER", RED),
-                                                    text(tiny("Final score"), GRAY),
-                                                    text(score, GOLD)));
+                if (p != null) {
+                    player.getPlayer().showTitle(title(text("GAME OVER", RED),
+                                                       text(tiny("final score ") + score, GRAY)));
+                    player.getPlayer().sendMessage(join(separator(space()),
+                                                        text("GAME OVER", RED),
+                                                        text(tiny("Final score"), GRAY),
+                                                        text(score, GOLD)));
+                    p.setFlySpeed(0.1f);
+                }
                 if (score > 0 && battle == null) {
                     tetrisPlugin().database.insertAsync(new SQLScore(this), null);
                     tetrisPlugin().getTetrisCommand().rebuildHighscores();
@@ -336,8 +347,9 @@ public final class TetrisGame {
                 fullRows = board.getFullRows();
                 if (fullRows.isEmpty()) {
                     state = GameState.FALL;
-                    Player p = player.getPlayer();
-                    p.playSound(p.getLocation(), Sound.BLOCK_STONE_FALL, SoundCategory.BLOCKS, 1.0f, 0.5f);
+                    if (p != null) {
+                        p.playSound(p.getLocation(), Sound.BLOCK_STONE_FALL, SoundCategory.BLOCKS, 1.0f, 0.5f);
+                    }
                 } else {
                     state = GameState.CLEAR;
                     int newLines = fullRows.size();
@@ -354,15 +366,16 @@ public final class TetrisGame {
                         }
                     }
                     int newLevel = lines / 10;
-                    Player p = player.getPlayer();
                     if (newLevel > level) {
                         level = newLevel;
-                        p.showTitle(title(text("" + level, GREEN),
-                                          text(tiny("levelup"), GREEN),
-                                          times(Duration.ofSeconds(0),
-                                                Duration.ofSeconds(1),
-                                                Duration.ofSeconds(0))));
-                        p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, SoundCategory.MASTER, 0.5f, 2.0f);
+                        if (p != null) {
+                            p.showTitle(title(text("" + level, GREEN),
+                                              text(tiny("levelup"), GREEN),
+                                              times(Duration.ofSeconds(0),
+                                                    Duration.ofSeconds(1),
+                                                    Duration.ofSeconds(0))));
+                            p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, SoundCategory.MASTER, 0.5f, 2.0f);
+                        }
                     }
                     for (int y : fullRows) {
                         board.clearRow(y);
@@ -502,6 +515,27 @@ public final class TetrisGame {
                 lastBattleScoreFrom.player.applyPlayer(p -> p.sendMessage(text("You sent a line to "
                                                                                + player.getName())));
             }
+        }
+        final Player p = player.getPlayer();
+        if (p != null) {
+            final Input input = p.getCurrentInput();
+            if (!wasLeft && input.isLeft()) {
+                move(p, -1);
+            } else if (!wasRight && input.isRight()) {
+                move(p, 1);
+            }
+            if (!wasUp && input.isForward()) {
+                turn(p, 1);
+            } else if (!wasDown && input.isBackward()) {
+                turn(p, -1);
+            }
+            if (input.isJump()) {
+                playerInputDrop(p);
+            }
+            wasLeft = input.isLeft();
+            wasRight = input.isRight();
+            wasUp = input.isForward();
+            wasDown = input.isBackward();
         }
         fallingTicks -= 1;
         if (fallingTicks > 0) return null;
@@ -733,6 +767,7 @@ public final class TetrisGame {
         p.setGameMode(GameMode.ADVENTURE);
         p.setAllowFlight(true);
         p.setFlying(true);
+        p.setFlySpeed(0f);
         for (int i = 0; i < 9; i += 1) {
             Hotbar hotbar = Hotbar.ofSlot(i);
             if (hotbar == null || hotbar.mytems == null) {
