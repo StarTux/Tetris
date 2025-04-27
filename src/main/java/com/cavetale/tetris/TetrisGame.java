@@ -84,6 +84,7 @@ public final class TetrisGame {
     private boolean wasRight;
     private boolean wasUp;
     private boolean wasDown;
+    private boolean unlocked;
 
     public void initialize(Player p) {
         board = new TetrisBoard(10, 20);
@@ -99,6 +100,7 @@ public final class TetrisGame {
         drawBoard();
         drawBlock(true);
         teleportHome(p);
+        setupHotbar(p);
         p.playSound(p.getLocation(), Sound.ENTITY_WITHER_SPAWN, SoundCategory.MASTER, 0.5f, 2.0f);
         educate(p);
         updateScoreFrame("glhf!");
@@ -519,18 +521,20 @@ public final class TetrisGame {
         final Player p = player.getPlayer();
         if (p != null) {
             final Input input = p.getCurrentInput();
-            if (!wasLeft && input.isLeft()) {
-                move(p, -1);
-            } else if (!wasRight && input.isRight()) {
-                move(p, 1);
-            }
-            if (!wasUp && input.isForward()) {
-                turn(p, 1);
-            } else if (!wasDown && input.isBackward()) {
-                turn(p, -1);
-            }
-            if (input.isJump()) {
-                playerInputDrop(p);
+            if (!unlocked) {
+                if (!wasLeft && input.isLeft()) {
+                    move(p, -1);
+                } else if (!wasRight && input.isRight()) {
+                    move(p, 1);
+                }
+                if (!wasUp && input.isForward()) {
+                    turn(p, 1);
+                } else if (!wasDown && input.isBackward()) {
+                    turn(p, -1);
+                }
+                if (input.isJump()) {
+                    playerInputDrop(p);
+                }
             }
             wasLeft = input.isLeft();
             wasRight = input.isRight();
@@ -612,6 +616,17 @@ public final class TetrisGame {
             break;
         case EYE:
             hidePlayers(p);
+            break;
+        case LOCK:
+            unlocked = !unlocked;
+            if (unlocked) {
+                p.setFlySpeed(0.1f);
+                p.sendActionBar(text("Position Unlocked", GREEN));
+            } else {
+                p.setFlySpeed(0f);
+                p.sendActionBar(text("Position Locked", RED));
+            }
+            setupHotbar(p);
             break;
         default: break;
         }
@@ -767,14 +782,23 @@ public final class TetrisGame {
         p.setGameMode(GameMode.ADVENTURE);
         p.setAllowFlight(true);
         p.setFlying(true);
-        p.setFlySpeed(0f);
+        if (!unlocked) {
+            p.setFlySpeed(0f);
+        }
+    }
+
+    public void setupHotbar(Player p) {
         for (int i = 0; i < 9; i += 1) {
             Hotbar hotbar = Hotbar.ofSlot(i);
             if (hotbar == null || hotbar.mytems == null) {
                 p.getInventory().setItem(i, null);
             } else {
-                p.getInventory().setItem(i, tooltip(hotbar.mytems.createIcon(),
-                                                    List.of(hotbar.text)));
+                if (hotbar == Hotbar.LOCK && unlocked) {
+                    p.getInventory().setItem(i, Mytems.SILVER_KEY.createIcon(List.of(text("Lock Position", RED))));
+                } else {
+                    p.getInventory().setItem(i, tooltip(hotbar.mytems.createIcon(),
+                                                        List.of(hotbar.text)));
+                }
             }
         }
         p.getInventory().setHeldItemSlot(Hotbar.NEUTRAL.slot);

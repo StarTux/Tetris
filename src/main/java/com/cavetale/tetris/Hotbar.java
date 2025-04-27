@@ -19,6 +19,7 @@ public enum Hotbar {
     RIGHT(2, Mytems.ARROW_RIGHT, text("Right", GREEN)),
     EYE(3, Mytems.BLIND_EYE, text("Hide Players", BLUE)),
     HOME(4, Mytems.REDO, text("Warp Home", BLUE)),
+    LOCK(5, Mytems.SILVER_KEYHOLE, text("Unlock Position", GREEN)),
     TURN_LEFT(6, Mytems.TURN_LEFT, text("Turn Left", GREEN)),
     TURN_RIGHT(8, Mytems.TURN_RIGHT, text("Turn Right", GREEN)),
     NEUTRAL(7, Mytems.INVISIBLE_ITEM, textOfChildren(text("[", GRAY),

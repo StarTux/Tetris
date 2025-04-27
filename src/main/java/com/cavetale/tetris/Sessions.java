@@ -183,7 +183,7 @@ public final class Sessions implements Listener {
         TetrisPlayer session = of(player);
         TetrisGame game = session.getGame();
         if (game == null) return;
-        if (!event.isFlying()) {
+        if (!event.isFlying() && !game.isUnlocked()) {
             event.setCancelled(true);
             game.teleportHome(player);
         }
