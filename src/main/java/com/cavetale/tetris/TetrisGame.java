@@ -79,6 +79,7 @@ public final class TetrisGame {
     private int tetrominoIndex;
     private List<GlowItemFrame> itemFrames = new ArrayList<>();
     private TetrisGame lastBattleScoreFrom;
+    private TetrisSkin skin = TetrisSkin.GRID;
     // WASD
     private boolean wasLeft;
     private boolean wasRight;
@@ -165,7 +166,7 @@ public final class TetrisGame {
     private void clearFrame() {
         for (int y = -1; y <= board.height; y += 1) {
             for (int x = -1; x <= board.width; x += 1) {
-                for (int z = -1; z <= 1; z += 1) {
+                for (int z = -2; z <= 1; z += 1) {
                     place.getBlockAt(x, y, z).setType(Material.AIR, false);
                 }
             }
@@ -179,13 +180,25 @@ public final class TetrisGame {
     private void drawFrame() {
         for (int y = -1; y <= board.height; y += 1) {
             for (int x = -1; x <= board.width; x += 1) {
+                final Material frameMaterial = skin.getFrameMaterial();
                 if ((x == -1 || x == board.width) || (y == -1 || y == board.height)) {
-                    Material frameMaterial = Material.WHITE_CONCRETE;
                     place.getBlockAt(x, y, -1).setType(frameMaterial, false);
                     place.getBlockAt(x, y, 0).setType(frameMaterial, false);
                     place.getBlockAt(x, y, 1).setType(frameMaterial, false);
                 } else {
-                    place.getBlockAt(x, y, -1).setType((x % 2) == (y % 2) ? Material.BLACK_CONCRETE : Material.BLACK_TERRACOTTA, false);
+                    switch (skin) {
+                    case GRID:
+                        if (x > 1 && x < board.width - 2 && y > 1 && y < board.height - 2) {
+                            place.getBlockAt(x, y, -1).setType(Material.CYAN_STAINED_GLASS);
+                        } else {
+                            place.getBlockAt(x, y, -1).setType(Material.BLACK_STAINED_GLASS);
+                        }
+                    break;
+                    case DEFAULT:
+                    default:
+                        place.getBlockAt(x, y, -1).setType((x % 2) == (y % 2) ? Material.BLACK_CONCRETE : Material.BLACK_TERRACOTTA, false);
+                    }
+                    place.getBlockAt(x, y, -2).setType(frameMaterial);
                     place.getBlockAt(x, y, 1).setType(Material.LIGHT, false);
                 }
             }
