@@ -50,7 +50,14 @@ public final class TetrisMatch {
             players.add(player);
             names.add(player.getName());
         }
+        disable();
         if (players.isEmpty()) return;
+        if (players.size() == 1) {
+            final Player player = players.get(0);
+            plugin.startGame(player);
+            player.sendMessage(text("Starting singleplayer game", GREEN));
+            return;
+        }
         TetrisBattle battle = new TetrisBattle();
         for (Player player : players) {
             TetrisGame game = plugin.startGame(player);
@@ -58,7 +65,6 @@ public final class TetrisMatch {
             game.setBattle(battle);
             player.sendMessage(text("Starting battle with " + String.join(", ", names), GREEN));
         }
-        disable();
         plugin.getLogger().info("[Match] Battle started: " + String.join(", ", names));
     }
 }
