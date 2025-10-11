@@ -174,11 +174,16 @@ public final class Tournament {
         this.highscoreLines = Highscore.sidebar(highscore, TrophyCategory.TETRIS);
     }
 
-    public int reward() {
+    public Map<UUID, Integer> getElos() {
         final Map<UUID, Integer> elos = new HashMap<>();
         for (Map.Entry<UUID, Double> entry : tag.elos.entrySet()) {
             elos.put(entry.getKey(), entry.getValue().intValue());
         }
+        return elos;
+    }
+
+    public int reward() {
+        final Map<UUID, Integer> elos = getElos();
         int result = Highscore.reward(elos,
                                       "tetris_tournament",
                                       TrophyCategory.TETRIS,
