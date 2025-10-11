@@ -188,11 +188,7 @@ public final class TetrisGame {
                 } else {
                     switch (skin) {
                     case GRID:
-                        if (x > 1 && x < board.width - 2 && y > 1 && y < board.height - 2) {
-                            place.getBlockAt(x, y, -1).setType(Material.CYAN_STAINED_GLASS);
-                        } else {
-                            place.getBlockAt(x, y, -1).setType(Material.BLACK_STAINED_GLASS);
-                        }
+                        place.getBlockAt(x, y, -1).setType(Material.CYAN_STAINED_GLASS);
                     break;
                     case DEFAULT:
                     default:
