@@ -237,13 +237,13 @@ public final class Tournament {
         }
         final List<Player> players = getWaitingPlayers();
         Collections.shuffle(players);
-        Collections.sort(players, Comparator.comparing(this::getElo));
+        // Collections.sort(players, Comparator.comparing(this::getElo));
         if (players.size() < 2) {
             return;
-        } else if (players.size() <= 3) {
+        } else if (players.size() < 6) {
             buildBattle(players);
         } else {
-            buildBattle(players.subList(0, 2));
+            buildBattle(players.subList(0, 3));
         }
     }
 
