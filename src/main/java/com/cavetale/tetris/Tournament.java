@@ -224,7 +224,7 @@ public final class Tournament {
 
     private void tickOncePerSecond() {
         if (!auto) return;
-        if (tag.round > 0 && tag.warmupTime < 5) {
+        if (tag.round > 0 && tag.warmupTime < 30) {
             tag.warmupTime += 1;
             plugin.getLogger().info("[Tournament] Warmup: " + tag.warmupTime);
             return;
