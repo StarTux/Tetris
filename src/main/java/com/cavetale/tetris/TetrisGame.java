@@ -79,7 +79,7 @@ public final class TetrisGame {
     private int tetrominoIndex;
     private List<GlowItemFrame> itemFrames = new ArrayList<>();
     private TetrisGame lastBattleScoreFrom;
-    private TetrisSkin skin = TetrisSkin.GRID;
+    private TetrisSkin skin = TetrisSkin.DEFAULT;
     // WASD
     private boolean wasLeft;
     private boolean wasRight;
