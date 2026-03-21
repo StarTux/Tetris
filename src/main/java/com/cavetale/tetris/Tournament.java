@@ -9,7 +9,6 @@ import com.cavetale.mytems.item.trophy.TrophyCategory;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -86,12 +85,14 @@ public final class Tournament {
             final boolean win = winner.getPlayer().is(hero);
             final double outcome = win ? 1.0 : 0.0;
             final double newElo = computeRating(heroElo, opponentElo, outcome, 32.0);
-            plugin.getLogger().info("[Elo]"
-                                    + " " + (win ? "WIN" : "LOSE")
-                                    + " " + PlayerCache.nameForUuid(hero)
-                                    + " " + ((int) heroElo)
-                                    + " vs " + ((int) opponentElo)
-                                    + " => " + ((int) newElo));
+            plugin.getLogger().info(
+                "[Elo]"
+                + " " + (win ? "WIN" : "LOSE")
+                + " " + PlayerCache.nameForUuid(hero)
+                + " " + ((int) heroElo)
+                + " vs " + ((int) opponentElo)
+                + " => " + ((int) newElo)
+            );
             tag.elos.put(hero, newElo);
         }
         // Save
@@ -184,19 +185,23 @@ public final class Tournament {
 
     public int reward() {
         final Map<UUID, Integer> elos = getElos();
-        int result = Highscore.reward(elos,
-                                      "tetris_tournament",
-                                      TrophyCategory.TETRIS,
-                                      textOfChildren(plugin.tetrisTitle, text(" Tournament", GREEN)),
-                                      hi -> "You earned a rating of " + hi.score);
-        List<String> titles = List.of("Tetromino",
-                                      "TetrisO",
-                                      "TetrisL",
-                                      "TetrisS",
-                                      "TetrisT",
-                                      "TetrisJ",
-                                      "TetrisZ",
-                                      "TetrisI");
+        int result = Highscore.reward(
+            elos,
+            "tetris_tournament",
+            TrophyCategory.TETRIS,
+            textOfChildren(plugin.tetrisTitle, text(" Tournament", GREEN)),
+            hi -> "You earned a rating of " + hi.score
+        );
+        List<String> titles = List.of(
+            "Tetromino",
+            "TetrisO",
+            "TetrisL",
+            "TetrisS",
+            "TetrisT",
+            "TetrisJ",
+            "TetrisZ",
+            "TetrisI"
+        );
         List<Highscore> list = Highscore.of(elos);
         for (int i = 0; i < list.size() && i < 3; i += 1) {
             String winnerName = PlayerCache.nameForUuid(list.get(i).uuid);
@@ -218,11 +223,15 @@ public final class Tournament {
                 l.add(textOfChildren(text("the next round.", GRAY)));
             }
             Highscore playerRank = getHighscore(p.uuid);
-            l.add(textOfChildren(text("Your rating ", GRAY),
-                                 (playerRank.getPlacement() > 0
-                                  ? Glyph.toComponent("" + playerRank.getPlacement())
-                                  : Mytems.QUESTION_MARK),
-                                 text(subscript("" + playerRank.score), GOLD)));
+            l.add(
+                textOfChildren(
+                    text("Your rating ", GRAY),
+                    (playerRank.getPlacement() > 0
+                     ? Glyph.toComponent("" + playerRank.getPlacement())
+                     : Mytems.QUESTION_MARK),
+                    text(subscript("" + playerRank.score), GOLD)
+                )
+            );
             l.addAll(highscoreLines);
         }
     }

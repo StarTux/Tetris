@@ -22,11 +22,16 @@ public enum Hotbar {
     LOCK(5, Mytems.SILVER_KEYHOLE, text("Unlock Position", GREEN)),
     TURN_LEFT(6, Mytems.TURN_LEFT, text("Turn Left", GREEN)),
     TURN_RIGHT(8, Mytems.TURN_RIGHT, text("Turn Right", GREEN)),
-    NEUTRAL(7, Mytems.INVISIBLE_ITEM, textOfChildren(text("[", GRAY),
-                                                     keybind("key.drop", GREEN),
-                                                     text("] Drop [", GRAY),
-                                                     keybind("key.swapOffhand", GREEN),
-                                                     text("] Swap", GRAY))),
+    NEUTRAL(
+        7, Mytems.INVISIBLE_ITEM,
+        textOfChildren(
+            text("[", GRAY),
+            keybind("key.drop", GREEN),
+            text("] Drop [", GRAY),
+            keybind("key.swapOffhand", GREEN),
+            text("] Swap", GRAY)
+        )
+    ),
     ;
 
     public final int slot;

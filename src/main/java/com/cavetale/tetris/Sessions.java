@@ -71,13 +71,16 @@ public final class Sessions implements Listener {
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
                     if (!player.isOnline()) return;
                     if (!plugin.getMatch().isEnabled()) return;
-                    player.sendMessage(textOfChildren(newline(),
-                                                      text("A match is about to start. ", GREEN, BOLD),
-                                                      Mytems.MOUSE_LEFT,
-                                                      text("Click here to join", GREEN, BOLD),
-                                                      newline())
-                                       .hoverEvent(showText(text("/tetris join", GREEN)))
-                                       .clickEvent(runCommand("/tetris join")));
+                    player.sendMessage(
+                        textOfChildren(
+                            newline(),
+                            text("A match is about to start. ", GREEN, BOLD),
+                            Mytems.MOUSE_LEFT,
+                            text("Click here to join", GREEN, BOLD),
+                            newline()
+                        )
+                        .hoverEvent(showText(text("/tetris join", GREEN)))
+                        .clickEvent(runCommand("/tetris join")));
                 }, 20L);
         }
     }
@@ -118,14 +121,18 @@ public final class Sessions implements Listener {
             event.sidebar(PlayerHudPriority.HIGHEST, l);
         }
         if (game == null && plugin.getTournament() == null && plugin.getMatch().isEnabled()) {
-            event.bossbar(PlayerHudPriority.DEFAULT,
-                          textOfChildren(text("Type "),
-                                         text("/tetris join", GREEN),
-                                         text(" to join the match: "),
-                                         text(plugin.getMatch().getJoined().size(), GREEN)),
-                          BossBar.Color.GREEN,
-                          BossBar.Overlay.PROGRESS,
-                          plugin.getMatch().getProgress());
+            event.bossbar(
+                PlayerHudPriority.DEFAULT,
+                textOfChildren(
+                    text("Type "),
+                    text("/tetris join", GREEN),
+                    text(" to join the match: "),
+                    text(plugin.getMatch().getJoined().size(), GREEN)
+                ),
+                BossBar.Color.GREEN,
+                BossBar.Overlay.PROGRESS,
+                plugin.getMatch().getProgress()
+            );
         }
     }
 
@@ -159,8 +166,13 @@ public final class Sessions implements Listener {
         Bukkit.getScheduler().runTask(plugin, () -> {
                 game.playerInputSwap(player);
                 player.getInventory().setItemInOffHand(null);
-                player.getInventory().setItem(Hotbar.NEUTRAL.slot, tooltip(Hotbar.NEUTRAL.mytems.createIcon(),
-                                                                           List.of(Hotbar.NEUTRAL.text)));
+                player.getInventory().setItem(
+                    Hotbar.NEUTRAL.slot,
+                    tooltip(
+                        Hotbar.NEUTRAL.mytems.createIcon(),
+                        List.of(Hotbar.NEUTRAL.text)
+                    )
+                );
             });
     }
 

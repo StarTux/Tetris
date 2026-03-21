@@ -148,15 +148,17 @@ public final class TetrisCommand extends AbstractCommand<TetrisPlugin> {
     }
 
     private static Component rankComponent(Highscore hi) {
-        return join(separator(space()),
-                    Glyph.toComponent("" + hi.placement),
-                    text("" + hi.row.getScore(), GOLD),
-                    textOfChildren(text(Unicode.tiny("lvl"), GRAY),
-                                   text("" + hi.row.getLevel(), GOLD)),
-                    textOfChildren(text(Unicode.tiny("ln"), GRAY),
-                                   text("" + hi.row.getLines(), BLUE)),
-                    text(hi.name(), WHITE),
-                    text(DATE_FORMAT.format(hi.row.getTime()), GRAY, ITALIC));
+        return join(
+            separator(space()),
+            Glyph.toComponent("" + hi.placement),
+            text("" + hi.row.getScore(), GOLD),
+            textOfChildren(text(Unicode.tiny("lvl"), GRAY),
+                           text("" + hi.row.getLevel(), GOLD)),
+            textOfChildren(text(Unicode.tiny("ln"), GRAY),
+                           text("" + hi.row.getLines(), BLUE)),
+            text(hi.name(), WHITE),
+            text(DATE_FORMAT.format(hi.row.getTime()), GRAY, ITALIC)
+        );
     }
 
     @RequiredArgsConstructor
@@ -182,13 +184,18 @@ public final class TetrisCommand extends AbstractCommand<TetrisPlugin> {
             for (Player other : Bukkit.getOnlinePlayers()) {
                 if (plugin.gameOf(other) != null) continue;
                 if (player.equals(other)) continue;
-                other.sendMessage(textOfChildren(newline(),
-                                                 text(player.getName() + " started a match. "),
-                                                 Mytems.MOUSE_LEFT,
-                                                 text("Click here to join", GREEN, BOLD),
-                                                 newline())
-                                  .hoverEvent(showText(text("/tetris join", GREEN)))
-                                  .clickEvent(runCommand("/tetris join")));
+                other.sendMessage(
+                    textOfChildren(
+                        newline(),
+                        text(player.getName() + " started a match. "),
+                        Mytems.MOUSE_LEFT,
+                        text("Click here to join", GREEN, BOLD),
+                        newline()
+                    )
+                    .hoverEvent(showText(text("/tetris join", GREEN)))
+                    .clickEvent(runCommand("/tetris join")
+                    )
+                );
             }
         }
         player.sendMessage(text("You joined the match", GREEN));

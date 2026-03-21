@@ -369,12 +369,20 @@ public final class TetrisGame {
             state = GameState.LOSE;
             stateTicks = 0;
             if (p != null) {
-                player.getPlayer().showTitle(title(text("GAME OVER", RED),
-                                                   text(tiny("final score ") + score, GRAY)));
-                player.getPlayer().sendMessage(join(separator(space()),
-                                                    text("GAME OVER", RED),
-                                                    text(tiny("Final score"), GRAY),
-                                                    text(score, GOLD)));
+                player.getPlayer().showTitle(
+                    title(
+                        text("GAME OVER", RED),
+                        text(tiny("final score ") + score, GRAY)
+                    )
+                );
+                player.getPlayer().sendMessage(
+                    join(
+                        separator(space()),
+                        text("GAME OVER", RED),
+                        text(tiny("Final score"), GRAY),
+                        text(score, GOLD)
+                    )
+                );
                 p.setFlySpeed(0.1f);
             }
             if (score > 0 && battle == null) {
@@ -413,11 +421,17 @@ public final class TetrisGame {
                 if (newLevel > level) {
                     level = newLevel;
                     if (p != null) {
-                        p.showTitle(title(text("" + level, GREEN),
-                                          text(tiny("levelup"), GREEN),
-                                          times(Duration.ofSeconds(0),
-                                                Duration.ofSeconds(1),
-                                                Duration.ofSeconds(0))));
+                        p.showTitle(
+                            title(
+                                text("" + level, GREEN),
+                                text(tiny("levelup"), GREEN),
+                                times(
+                                    Duration.ofSeconds(0),
+                                    Duration.ofSeconds(1),
+                                    Duration.ofSeconds(0)
+                                )
+                            )
+                        );
                         p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, SoundCategory.MASTER, 0.5f, 2.0f);
                     }
                 }
@@ -466,17 +480,19 @@ public final class TetrisGame {
         int rank = 0;
         for (TetrisGame game : battle.getGames()) {
             rank += 1;
-            messageLines.add(textOfChildren(text(rank + " ", GOLD),
-                                            (game == this
-                                             ? Mytems.WHITE_QUEEN
-                                             : empty()),
-                                            text(game.player.getName(), WHITE),
-                                            text(tiny(" score"), GRAY),
-                                            text(game.score, WHITE),
-                                            text(tiny(" lines"), GRAY),
-                                            text(game.lines, WHITE),
-                                            text(tiny(" lvl"), GRAY),
-                                            text(game.level, BLUE)));
+            messageLines.add(
+                textOfChildren(
+                    text(rank + " ", GOLD),
+                    game == this ? Mytems.WHITE_QUEEN : empty(),
+                    text(game.player.getName(), WHITE),
+                    text(tiny(" score"), GRAY),
+                    text(game.score, WHITE),
+                    text(tiny(" lines"), GRAY),
+                    text(game.lines, WHITE),
+                    text(tiny(" lvl"), GRAY),
+                    text(game.level, BLUE)
+                )
+            );
             if (tetrisPlugin().getTournament() != null) {
                 // Server event
                 if (tetrisPlugin().getTournament().isEvent()) {
@@ -785,17 +801,21 @@ public final class TetrisGame {
     }
 
     public void bossbar(PlayerHudEvent event) {
-        event.bossbar(PlayerHudPriority.HIGH,
-                      textOfChildren(text(tiny("next"), GRAY),
-                                     text("["),
-                                     nextBlock.mytems.component,
-                                     text("]"),
-                                     space(),
-                                     text(tiny("lvl"), GRAY),
-                                     text("" + level)),
-                      BossBar.Color.BLUE,
-                      BossBar.Overlay.PROGRESS,
-                      ((float) (lines % 10)) / 10.0f);
+        event.bossbar(
+            PlayerHudPriority.HIGH,
+            textOfChildren(
+                text(tiny("next"), GRAY),
+                text("["),
+                nextBlock.mytems.component,
+                text("]"),
+                space(),
+                text(tiny("lvl"), GRAY),
+                text("" + level)
+            ),
+            BossBar.Color.BLUE,
+            BossBar.Overlay.PROGRESS,
+            ((float) (lines % 10)) / 10.0f
+        );
     }
 
     public void shiftUp() {
