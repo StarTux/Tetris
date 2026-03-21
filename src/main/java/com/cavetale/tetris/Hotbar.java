@@ -27,7 +27,7 @@ public enum Hotbar {
         textOfChildren(
             text("[", GRAY),
             keybind("key.drop", GREEN),
-            text("] Drop [", GRAY),
+            text("] Down [", GRAY),
             keybind("key.swapOffhand", GREEN),
             text("] Swap", GRAY)
         )
