@@ -643,7 +643,7 @@ public final class TetrisGame {
             move(p, 1);
             break;
         case DOWN:
-            playerInputDrop(p);
+            playerInputDown(p);
             break;
         case TURN_LEFT:
             turn(p, -1);
