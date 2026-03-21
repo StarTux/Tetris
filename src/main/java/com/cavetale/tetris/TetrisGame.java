@@ -82,6 +82,7 @@ public final class TetrisGame {
     private TetrisSkin skin = TetrisSkin.DEFAULT;
     private Input oldInput;
     private boolean unlocked;
+    private int chain;
 
     public void initialize(Player p) {
         board = new TetrisBoard(10, 20);
@@ -397,25 +398,30 @@ public final class TetrisGame {
             board.paste(block.getBoard(), block.getX(), block.getY());
             fullRows = board.getFullRows();
             if (fullRows.isEmpty()) {
+                chain = 0;
                 state = GameState.FALL;
                 resetFallingTicks();
                 if (p != null) {
                     p.playSound(p.getLocation(), Sound.BLOCK_STONE_FALL, SoundCategory.BLOCKS, 1.0f, 0.5f);
                 }
             } else {
+                chain += 1;
                 state = GameState.CLEAR;
                 int newLines = fullRows.size();
                 clearTicks = 10 * newLines;
                 lines += newLines;
-                int scoreBonus = scoreBonus(newLines) * (level + 1);
+                final int scoreBonus = scoreBonus(newLines) * (level + 1) * chain;
                 score += scoreBonus;
                 if (newLines >= 4 && battle != null) {
-                    battleScore += level;
+                    battleScore += level * chain;
                     for (TetrisGame other : battle.getGames()) {
                         if (other == this) continue;
-                        other.battleScore -= level;
+                        other.battleScore -= level * chain;
                         other.lastBattleScoreFrom = this;
                     }
+                }
+                if (p != null) {
+                    p.sendActionBar(text("+" + scoreBonus, GREEN));
                 }
                 int newLevel = lines / 10;
                 if (newLevel > level) {
@@ -558,10 +564,8 @@ public final class TetrisGame {
             battleScore = Math.max(0, battleScore + level);
             shiftUp();
             if (lastBattleScoreFrom != null) {
-                player.applyPlayer(p -> p.sendMessage(text(lastBattleScoreFrom.player.getName()
-                                                           + " sent you a line", RED)));
-                lastBattleScoreFrom.player.applyPlayer(p -> p.sendMessage(text("You sent a line to "
-                                                                               + player.getName())));
+                player.applyPlayer(p -> p.sendMessage(text(lastBattleScoreFrom.player.getName() + " sent you a line", RED)));
+                lastBattleScoreFrom.player.applyPlayer(p -> p.sendMessage(text("You sent a line to " + player.getName())));
             }
         }
         final Player p = player.getPlayer();
@@ -781,6 +785,7 @@ public final class TetrisGame {
         l.add(join(separator(space()), text(tiny("score"), GRAY), text("" + score, WHITE)));
         l.add(join(separator(space()), text(tiny("level"), GRAY), text("" + level, WHITE)));
         l.add(join(separator(space()), text(tiny("lines"), GRAY), text("" + lines, WHITE)));
+        l.add(join(separator(space()), text(tiny("chain"), GRAY), text("" + chain, WHITE)));
         if (battle != null) {
             l.add(text(tiny("opponents"), GOLD));
             List<TetrisGame> games = new ArrayList<>(battle.getGames());
