@@ -80,11 +80,7 @@ public final class TetrisGame {
     private List<GlowItemFrame> itemFrames = new ArrayList<>();
     private TetrisGame lastBattleScoreFrom;
     private TetrisSkin skin = TetrisSkin.DEFAULT;
-    // WASD
-    private boolean wasLeft;
-    private boolean wasRight;
-    private boolean wasUp;
-    private boolean wasDown;
+    private Input oldInput;
     private boolean unlocked;
 
     public void initialize(Player p) {
@@ -106,25 +102,45 @@ public final class TetrisGame {
         educate(p);
         updateScoreFrame("glhf!");
         updateNextFrames();
+        oldInput = p.getCurrentInput();
     }
 
     protected static void educate(Player p) {
+        p.sendMessage(
+            textOfChildren(
+                TetrisPlugin.getInstance().getTetrisTitle(),
+                text(" Controls", GREEN, BOLD)
+            )
+        );
         for (Hotbar hotbar : Hotbar.values()) {
             List<Component> components = new ArrayList<>();
-            components.add(space());
             if (hotbar == Hotbar.NEUTRAL) {
-                components.add(text("[", GRAY));
-                components.add(keybind("key.drop"));
-                components.add(text("]", GRAY));
-                components.add(space());
-                components.add(text("Drop", RED));
-                components.add(newline());
-                components.add(space());
-                components.add(text("[", GRAY));
-                components.add(keybind("key.swapOffhand"));
-                components.add(text("]", GRAY));
-                components.add(space());
-                components.add(text("Save", AQUA));
+                components.add(
+                    textOfChildren(
+                        text("[", GRAY),
+                        keybind("key.drop"),
+                        text("]", GRAY),
+                        text(" Down", AQUA),
+                        newline()
+                    )
+                );
+                components.add(
+                    textOfChildren(
+                        text("[", GRAY),
+                        keybind("key.swapOffhand"),
+                        text("]", GRAY),
+                        text(" Save", AQUA),
+                        newline()
+                    )
+                );
+                components.add(
+                    textOfChildren(
+                        text("[", GRAY),
+                        keybind("key.jump"),
+                        text("]", GRAY),
+                        text(" DROP", RED)
+                    )
+                );
             } else {
                 components.add(text("[", GRAY));
                 components.add(keybind("key.hotbar." + (hotbar.slot + 1)));
@@ -324,90 +340,9 @@ public final class TetrisGame {
         }
         stateTicks += 1;
         if (newState == null) return;
-        final Player p = player.getPlayer();
         switch (newState) {
         case LAND: {
-            boolean[] lost = new boolean[1];
-            block.getBoard().forEachCell((x, y, color) -> {
-                    if (y + block.getY() > board.height) {
-                        lost[0] = true;
-                    }
-                });
-            if (lost[0]) {
-                state = GameState.LOSE;
-                stateTicks = 0;
-                if (p != null) {
-                    player.getPlayer().showTitle(title(text("GAME OVER", RED),
-                                                       text(tiny("final score ") + score, GRAY)));
-                    player.getPlayer().sendMessage(join(separator(space()),
-                                                        text("GAME OVER", RED),
-                                                        text(tiny("Final score"), GRAY),
-                                                        text(score, GOLD)));
-                    p.setFlySpeed(0.1f);
-                }
-                if (score > 0 && battle == null) {
-                    tetrisPlugin().database.insertAsync(new SQLScore(this), null);
-                    tetrisPlugin().getTetrisCommand().rebuildHighscores();
-                }
-                if (lines == 0 && tetrisPlugin().getTournament() != null) {
-                    tetrisPlugin().getLogger().info("Kicking " + player.getName() + " because they are afk");
-                    player.getPlayer().kick(text("afk"));
-                }
-            } else {
-                board.paste(block.getBoard(), block.getX(), block.getY());
-                fullRows = board.getFullRows();
-                if (fullRows.isEmpty()) {
-                    state = GameState.FALL;
-                    if (p != null) {
-                        p.playSound(p.getLocation(), Sound.BLOCK_STONE_FALL, SoundCategory.BLOCKS, 1.0f, 0.5f);
-                    }
-                } else {
-                    state = GameState.CLEAR;
-                    int newLines = fullRows.size();
-                    clearTicks = 10 * newLines;
-                    lines += newLines;
-                    int scoreBonus = scoreBonus(newLines) * (level + 1);
-                    score += scoreBonus;
-                    if (newLines >= 4 && battle != null) {
-                        battleScore += level;
-                        for (TetrisGame other : battle.getGames()) {
-                            if (other == this) continue;
-                            other.battleScore -= level;
-                            other.lastBattleScoreFrom = this;
-                        }
-                    }
-                    int newLevel = lines / 10;
-                    if (newLevel > level) {
-                        level = newLevel;
-                        if (p != null) {
-                            p.showTitle(title(text("" + level, GREEN),
-                                              text(tiny("levelup"), GREEN),
-                                              times(Duration.ofSeconds(0),
-                                                    Duration.ofSeconds(1),
-                                                    Duration.ofSeconds(0))));
-                            p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, SoundCategory.MASTER, 0.5f, 2.0f);
-                        }
-                    }
-                    for (int y : fullRows) {
-                        board.clearRow(y);
-                        for (int x = 0; x < board.width; x += 1) {
-                            Location location = place.getBlockAt(x, y, 0).getLocation().add(0.5, 0.0, 0.5);
-                            location.getWorld().spawn(location, TNTPrimed.class, tnt -> {
-                                    tnt.setPersistent(false);
-                                    tnt.setFuseTicks(clearTicks);
-                                    tnt.setSilent(true);
-                                    EntityMarker.setId(tnt, "tetris");
-                                });
-                        }
-                    }
-                }
-                drawBoard();
-                makeNewBlock();
-                drawBlock(true);
-                stateTicks = 0;
-                updateScoreFrame("" + score + " l" + level);
-                updateNextFrames();
-            }
+            landBlock();
             break;
         }
         case DISABLE: {
@@ -419,6 +354,92 @@ public final class TetrisGame {
             stateTicks = 0;
             break;
         default: throw new IllegalStateException("newState=" + newState);
+        }
+    }
+
+    private void landBlock() {
+        final Player p = player.getPlayer();
+        boolean[] lost = new boolean[1];
+        block.getBoard().forEachCell((x, y, color) -> {
+                if (y + block.getY() > board.height) {
+                    lost[0] = true;
+                }
+            });
+        if (lost[0]) {
+            state = GameState.LOSE;
+            stateTicks = 0;
+            if (p != null) {
+                player.getPlayer().showTitle(title(text("GAME OVER", RED),
+                                                   text(tiny("final score ") + score, GRAY)));
+                player.getPlayer().sendMessage(join(separator(space()),
+                                                    text("GAME OVER", RED),
+                                                    text(tiny("Final score"), GRAY),
+                                                    text(score, GOLD)));
+                p.setFlySpeed(0.1f);
+            }
+            if (score > 0 && battle == null) {
+                tetrisPlugin().database.insertAsync(new SQLScore(this), null);
+                tetrisPlugin().getTetrisCommand().rebuildHighscores();
+            }
+            if (lines == 0 && tetrisPlugin().getTournament() != null) {
+                tetrisPlugin().getLogger().info("Kicking " + player.getName() + " because they are afk");
+                player.getPlayer().kick(text("afk"));
+            }
+        } else {
+            board.paste(block.getBoard(), block.getX(), block.getY());
+            fullRows = board.getFullRows();
+            if (fullRows.isEmpty()) {
+                state = GameState.FALL;
+                resetFallingTicks();
+                if (p != null) {
+                    p.playSound(p.getLocation(), Sound.BLOCK_STONE_FALL, SoundCategory.BLOCKS, 1.0f, 0.5f);
+                }
+            } else {
+                state = GameState.CLEAR;
+                int newLines = fullRows.size();
+                clearTicks = 10 * newLines;
+                lines += newLines;
+                int scoreBonus = scoreBonus(newLines) * (level + 1);
+                score += scoreBonus;
+                if (newLines >= 4 && battle != null) {
+                    battleScore += level;
+                    for (TetrisGame other : battle.getGames()) {
+                        if (other == this) continue;
+                        other.battleScore -= level;
+                        other.lastBattleScoreFrom = this;
+                    }
+                }
+                int newLevel = lines / 10;
+                if (newLevel > level) {
+                    level = newLevel;
+                    if (p != null) {
+                        p.showTitle(title(text("" + level, GREEN),
+                                          text(tiny("levelup"), GREEN),
+                                          times(Duration.ofSeconds(0),
+                                                Duration.ofSeconds(1),
+                                                Duration.ofSeconds(0))));
+                        p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, SoundCategory.MASTER, 0.5f, 2.0f);
+                    }
+                }
+                for (int y : fullRows) {
+                    board.clearRow(y);
+                    for (int x = 0; x < board.width; x += 1) {
+                        Location location = place.getBlockAt(x, y, 0).getLocation().add(0.5, 0.0, 0.5);
+                        location.getWorld().spawn(location, TNTPrimed.class, tnt -> {
+                                tnt.setPersistent(false);
+                                tnt.setFuseTicks(clearTicks);
+                                tnt.setSilent(true);
+                                EntityMarker.setId(tnt, "tetris");
+                            });
+                    }
+                }
+            }
+            drawBoard();
+            makeNewBlock();
+            drawBlock(true);
+            stateTicks = 0;
+            updateScoreFrame("" + score + " l" + level);
+            updateNextFrames();
         }
     }
 
@@ -531,24 +552,21 @@ public final class TetrisGame {
         if (p != null) {
             final Input input = p.getCurrentInput();
             if (!unlocked) {
-                if (!wasLeft && input.isLeft()) {
+                if (!oldInput.isLeft() && input.isLeft()) {
                     move(p, -1);
-                } else if (!wasRight && input.isRight()) {
+                } else if (!oldInput.isRight() && input.isRight()) {
                     move(p, 1);
                 }
-                if (!wasUp && input.isForward()) {
+                if (!oldInput.isForward() && input.isForward()) {
                     turn(p, 1);
-                } else if (!wasDown && input.isBackward()) {
+                } else if (!oldInput.isBackward() && input.isBackward()) {
                     turn(p, -1);
                 }
-                if (input.isJump()) {
+                if (!oldInput.isJump() && input.isJump()) {
                     playerInputDrop(p);
                 }
             }
-            wasLeft = input.isLeft();
-            wasRight = input.isRight();
-            wasUp = input.isForward();
-            wasDown = input.isBackward();
+            oldInput = input;
         }
         fallingTicks -= 1;
         if (fallingTicks > 0) return null;
@@ -605,14 +623,7 @@ public final class TetrisGame {
             move(p, 1);
             break;
         case DOWN:
-            if (doesBlockFitAt(block.getX(), block.getY() - 1, block.getRotation())) {
-                drawBlock(false);
-                block.setY(block.getY() - 1);
-                drawBlock(true);
-                resetFallingTicks();
-                p.sendActionBar(text("Down", GREEN));
-                bit(p, 1.0f);
-            }
+            playerInputDrop(p);
             break;
         case TURN_LEFT:
             turn(p, -1);
@@ -666,12 +677,25 @@ public final class TetrisGame {
             success = true;
         }
         drawBlock(true);
+        landBlock();
         if (success) {
-            resetFallingTicks();
             bit(p, 2.0f);
         } else {
             bit(p, 0.5f);
         }
+    }
+
+    public void playerInputDown(Player p) {
+        if (!doesBlockFitAt(block.getX(), block.getY() - 1, block.getRotation())) {
+            bit(p, 0.5f);
+            return;
+        }
+        drawBlock(false);
+        block.setY(block.getY() - 1);
+        drawBlock(true);
+        resetFallingTicks();
+        p.sendActionBar(text("Down", GREEN));
+        bit(p, 1.0f);
     }
 
     public void playerInputSwap(Player p) {

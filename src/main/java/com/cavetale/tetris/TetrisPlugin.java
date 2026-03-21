@@ -19,16 +19,17 @@ import static net.kyori.adventure.text.JoinConfiguration.noSeparators;
 import static net.kyori.adventure.text.format.NamedTextColor.*;
 import static net.kyori.adventure.text.format.TextDecoration.*;
 
+@Getter
 public final class TetrisPlugin extends JavaPlugin {
     @Getter protected static TetrisPlugin instance;
-    @Getter private TetrisCommand tetrisCommand = new TetrisCommand(this);
+    private TetrisCommand tetrisCommand = new TetrisCommand(this);
     private AdminCommand adminCommand = new AdminCommand(this);
     private EventListener eventListener = new EventListener(this);
     protected Sessions sessions = new Sessions(this);
-    @Getter @Setter private Tournament tournament = null;
-    @Getter protected final Allocator allocator = new Allocator(this);
-    @Getter protected List<TetrisGame> games = new ArrayList<>();
-    @Getter protected TetrisMatch match = new TetrisMatch(this);
+    @Setter private Tournament tournament = null;
+    protected final Allocator allocator = new Allocator(this);
+    protected List<TetrisGame> games = new ArrayList<>();
+    protected TetrisMatch match = new TetrisMatch(this);
     protected SQLDatabase database = new SQLDatabase(this);
     public final Component tetrisTitle = join(noSeparators(), new Component[] {
             text("T", GOLD),

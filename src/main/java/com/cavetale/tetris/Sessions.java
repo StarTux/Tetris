@@ -145,7 +145,7 @@ public final class Sessions implements Listener {
         if (game == null) return;
         event.setCancelled(true);
         Bukkit.getScheduler().runTask(plugin, () -> {
-                game.playerInputDrop(player);
+                game.playerInputDown(player);
             });
     }
 
