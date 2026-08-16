@@ -71,7 +71,7 @@
       <scope>provided</scope>
     </dependency>
 
-    <!-- KIT -->
+    <!-- Kit -->
     <dependency>
       <groupId>com.winthier.kit</groupId>
       <artifactId>kit</artifactId>
