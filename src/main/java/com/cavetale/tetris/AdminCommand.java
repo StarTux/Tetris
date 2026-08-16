@@ -6,9 +6,9 @@ import com.cavetale.core.command.CommandNode;
 import com.cavetale.core.command.CommandWarn;
 import com.cavetale.core.playercache.PlayerCache;
 import com.cavetale.fam.trophy.Highscore;
+import com.winthier.kit.Kits;
 import java.util.ArrayList;
 import java.util.List;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -166,9 +166,8 @@ public final class AdminCommand extends AbstractCommand<TetrisPlugin> {
         }
         int count = plugin.getTournament().reward();
         sender.sendMessage(text(count + " rewards given"));
-        for (Component line : Highscore.rewardMoneyWithFeedback(plugin, plugin.getTournament().getElos(), "Tetris")) {
-            sender.sendMessage(line);
-        }
+        Highscore.rewardMoneyWithFeedback(sender, plugin, plugin.getTournament().getElos(), "Tetris");
+        Kits.autoCreateKit(sender, "tetris", plugin.getTournament().getElos().keySet());
     }
 
     private boolean battleStart(CommandSender sender, String[] args) {
