@@ -8,7 +8,7 @@ import com.cavetale.mytems.item.font.Glyph;
 import com.cavetale.mytems.item.trophy.TrophyCategory;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -249,16 +249,49 @@ public final class Tournament {
             plugin.getLogger().info("[Tournament] New round: " + tag.round);
             return;
         }
+        tryToBuildBattles();
+    }
+
+    private void tryToBuildBattles() {
         final List<Player> players = getWaitingPlayers();
-        Collections.shuffle(players);
-        // Collections.sort(players, Comparator.comparing(this::getElo));
-        if (players.size() < 2) {
-            return;
-        } else if (players.size() < 6) {
-            buildBattle(players);
-        } else {
-            buildBattle(players.subList(0, 3));
+        if (players.size() < 2) return;
+        players.sort(Comparator.comparing(this::getElo));
+        while (players.size() > 1) {
+            // 3 or less players, just have them all play each other.
+            if (players.size() <= 3) {
+                plugin.getLogger().info("[Tournament] Small pool: " + players.size());
+                buildBattle(players);
+                return;
+            }
+            tryToBuildBattle(players);
         }
+    }
+
+    /**
+     * Try to build a battle of two players who have not played each
+     * other, and remove them from the list.
+     *
+     * If that fails, pick any opponent.
+     *
+     * @param players a list with 4 or more waiting players
+     */
+    private void tryToBuildBattle(List<Player> players) {
+        // Try to find a pair who has not played each other.
+        final Player pivot = players.remove(players.size() - 1);
+        Player other = null;
+        for (int i = players.size() - 1; i >= 0; i -= 1) {
+            other = players.get(i);
+            if (!tag.hasPlayedAgainst(pivot.getUniqueId(), other.getUniqueId())) {
+                plugin.getLogger().info("[Tournament] Not played: " + pivot.getName() + " vs " + other.getName());
+                players.remove(i);
+                buildBattle(List.of(pivot, other));
+                return;
+            }
+        }
+        // If all fails, just pick anyone.
+        other = players.remove(players.size() - 1);
+        plugin.getLogger().info("[Tournament] Fallback: " + pivot.getName() + " vs " + other.getName());
+        buildBattle(List.of(pivot, other));
     }
 
     private List<Player> getWaitingPlayers() {
@@ -276,6 +309,7 @@ public final class Tournament {
     }
 
     private void buildBattle(List<Player> matchList) {
+        tag.setAlreadyPlayed(matchList);
         TetrisBattle battle = new TetrisBattle();
         List<String> names = new ArrayList<>();
         for (Player player : matchList) {
@@ -303,12 +337,29 @@ public final class Tournament {
         protected Map<UUID, Double> elos = new HashMap<>();
         protected int round = 0;
         protected Set<UUID> alreadyPlayed = new HashSet<>();
+        protected Set<Set<UUID>> alreadyPlayedPairs = new HashSet<>();
         protected int warmupTime;
 
         protected void startNewRound() {
             round += 1;
             alreadyPlayed.clear();
             warmupTime = 0;
+        }
+
+        protected boolean hasPlayedAgainst(UUID a, UUID b) {
+            return alreadyPlayedPairs.contains(Set.of(a, b));
+        }
+
+        protected void setPlayedAgainst(UUID a, UUID b) {
+            alreadyPlayedPairs.add(Set.of(a, b));
+        }
+
+        protected void setAlreadyPlayed(List<Player> list) {
+            for (int i = 0; i < list.size() - 1; i += 1) {
+                for (int j = i + 1; j <  list.size(); j += 1) {
+                    setPlayedAgainst(list.get(i).getUniqueId(), list.get(j).getUniqueId());
+                }
+            }
         }
     }
 }
